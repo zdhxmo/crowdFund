@@ -1,6 +1,5 @@
 # CrowDFund
 
-
 To compile the contracts:
 
 ```
@@ -13,17 +12,24 @@ To run unit tests:
 npx hardhat test
 ```
 
-To run  a testnet node:
+To run a testnet node and deploy contracts on it:
 
 ```
 npx hardhat node
+npx hardhat run scripts/deploy.js
+```
+
+To deploy contracts onto a network
+
+```
+npx hardhat run scripts/deploy.js --network <network-name>
 ```
 
 For additional help:
+
 ```
 npx hardhat help
 ```
-
 
 ## Getting Started with the frontend
 
