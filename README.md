@@ -1,27 +1,35 @@
-# Basic Sample Hardhat Project
+# CrowDFund
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
 
-Try running some of the following tasks:
+To compile the contracts:
 
-```shell
-npx hardhat accounts
+```
 npx hardhat compile
-npx hardhat clean
+```
+
+To run unit tests:
+
+```
 npx hardhat test
+```
+
+To run  a testnet node:
+
+```
 npx hardhat node
-node scripts/sample-script.js
+```
+
+For additional help:
+```
 npx hardhat help
 ```
 
 
-## Getting Started wth the frontend
+## Getting Started with the frontend
 
 First, run the development server:
 
-```bash
-npm run dev
-# or
+```
 yarn dev
 ```
 
