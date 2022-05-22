@@ -1,44 +1,60 @@
 const { expect } = require("chai");
 const CrowdFund = artifacts.require('CrowdFund');
-
 const {
     expectEvent,  // Assertions for emitted events
     expectRevert, // Assertions for transactions that should fail
+    time
 } = require('@openzeppelin/test-helpers');
-
-var Web3 = require('web3');
-var web3 = new Web3('http://localhost:8545');
-var BN = web3.utils.BN;
-
-const getCurrentTime = require('./utils/time').getCurrentTime;
+const { BigNumber, utils } = require("ethers");
 
 contract('CrowdFund', accounts => {
     it("creates a new project", async () => {
         const crowdfund = await CrowdFund.deployed();
-
-        let time = await getCurrentTime();
-        const totalDays = time + 30;
-        const goal = new BN(10);
+        const goal = BigNumber.from(1);
+        const totalDays = await time.latest();
 
         const receipt = await crowdfund.createNewProject("project1", "project description is descriptive", "ipfs:url_hash", totalDays, goal, { from: accounts[0] });
-
         expectEvent(receipt, 'NewProjectCreated');
     });
 
 
     it('contributes to project', async () => {
         const crowdfund = await CrowdFund.deployed();
+        const sendTx = utils.parseUnits("1.0", 17);
 
-        const sendTx = new BN(1);
-        let time = await getCurrentTime();
-        const totalDays = time + 30;
-        const goal = new BN(10);
+        const fundsReceipt = await crowdfund.contributeFunds(1, { from: accounts[1], value: sendTx });
+        expectEvent(fundsReceipt, 'FundsReceive');
+    });
 
-        await crowdfund.createNewProject("project1", "project description is descriptive", "ipfs:url_hash", totalDays, goal, { from: accounts[0] });
-
+    it('gives success if goal reached', async () => {
+        const crowdfund = await CrowdFund.deployed();
+        const sendTx = utils.parseUnits("9.0", 17);
         const fundsReceipt = await crowdfund.contributeFunds(1, { from: accounts[1], value: sendTx });
 
         expectEvent(fundsReceipt, 'FundsReceive');
-    });
+        expectEvent(fundsReceipt, 'SuccessFundRaise');
+    })
+
+    // TODO: increase time and fail transaction
+    /* it('fails contribution is deadline expired', async () => {
+        const crowdfund = await CrowdFund.deployed();
+        const goal = BigNumber.from(1);
+        const totalDays = await time.latest();
+
+        const receipt = await crowdfund.createNewProject("project2", "project description is descriptive", "ipfs:url_hash", totalDays, goal, { from: accounts[0] });
+        expectEvent(receipt, 'NewProjectCreated');
+
+        // const sendTx = utils.parseUnits("9.0", 10);
+        // const fundsReceipt = await crowdfund.contributeFunds(2, { from: accounts[1], value: sendTx });
+        // expectEvent(fundsReceipt, 'FundsReceive');
+
+        // increase time
+        await time.increaseTo(totalDays.add(time.duration.hours(1)));
+
+        const sendTx2 = utils.parseUnits("9.0", 10);
+        const fundsReceipt2 = await crowdfund.contributeFunds(2, { from: accounts[2], value: sendTx2 });
+        expectRevert(fundsReceipt2, 'Contributions cannot be made to this project anymore.')
+        // expectEvent(fundsReceipt2, 'ExpireFundraise')
+    }) */
 })
 

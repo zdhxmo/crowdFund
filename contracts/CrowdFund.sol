@@ -157,11 +157,8 @@ contract CrowdFund {
     {
         require(_id <= projectCount, "Project ID out of range");
 
-        // get project
-        Project memory newFR = idToProject[_id];
-
         require(
-            block.timestamp <= newFR.projectDeadline,
+            block.timestamp <= idToProject[_id].projectDeadline,
             "Contributions cannot be made to this project anymore."
         );
 
@@ -176,25 +173,25 @@ contract CrowdFund {
 
         // check if goal is reached within timeframe -> success
         if (
-            newFR.totalPledged >= newFR.goal &&
-            block.timestamp < newFR.projectDeadline
+            idToProject[_id].totalPledged >= idToProject[_id].goal &&
+            block.timestamp < idToProject[_id].projectDeadline
         ) {
-            newFR.currentState = State.Success;
+            idToProject[_id].currentState = State.Success;
             emit SuccessFundRaise(
                 _id,
-                newFR.name,
-                newFR.projectDeadline,
-                newFR.goal
+                idToProject[_id].name,
+                idToProject[_id].projectDeadline,
+                idToProject[_id].goal
             );
         }
         // if time has run out -> expire
-        else if (block.timestamp > newFR.projectDeadline) {
-            newFR.currentState = State.Expire;
+        else if (block.timestamp > idToProject[_id].projectDeadline) {
+            idToProject[_id].currentState = State.Expire;
             emit ExpireFundraise(
                 _id,
-                newFR.name,
-                newFR.projectDeadline,
-                newFR.goal
+                idToProject[_id].name,
+                idToProject[_id].projectDeadline,
+                idToProject[_id].goal
             );
         }
 
@@ -202,8 +199,8 @@ contract CrowdFund {
             _id,
             msg.sender,
             msg.value,
-            newFR.totalPledged,
-            newFR.netDiff
+            idToProject[_id].totalPledged,
+            idToProject[_id].netDiff
         );
     }
 }
