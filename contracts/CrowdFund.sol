@@ -36,6 +36,12 @@ contract CrowdFund {
         uint256 netDifference
     );
 
+    event NewWithdrawalRequest(
+        uint256 indexed id,
+        string description,
+        uint256 amount
+    );
+
     /*===== State variables =====*/
     address payable platformAdmin;
 
@@ -43,6 +49,11 @@ contract CrowdFund {
         Fundraise,
         Expire,
         Success
+    }
+
+    enum Withdrawal {
+        Allow,
+        Reject
     }
 
     struct Project {
@@ -68,11 +79,30 @@ contract CrowdFund {
         State currentState;
     }
 
+    struct WithdrawalRequest {
+        // purpose of withdrawal
+        string description;
+        // amount of withdrawal requested
+        uint256 withdrawalAmount;
+        // project owner address
+        address recipient;
+        // total votes received for request
+        uint256 approvedVotes;
+        // current state of the withdrawal request
+        Withdrawal currentWithdrawalState;
+    }
+
     // project states
     uint256 public projectCount;
     mapping(uint256 => Project) public idToProject;
     // project id => contributor => contribution
     mapping(uint256 => mapping(address => uint256)) public contributions;
+
+    // withdrawal approvals
+    // project id => approver => vote bool
+    mapping(uint256 => mapping(address => bool)) approvals;
+    // withdrawal requests
+    mapping(uint256 => WithdrawalRequest) idToWithdrawalRequests;
 
     /*===== Modifiers =====*/
     modifier checkState(uint256 _id, State _state) {
@@ -84,12 +114,17 @@ contract CrowdFund {
     }
 
     modifier onlyAdmin() {
-        require(msg.sender == platformAdmin, "Unauthorized access");
+        require(msg.sender == platformAdmin, "Unauthorized access. Only admin can use this function");
         _;
     }
 
     modifier onlyProjectOwner(uint256 _id) {
-        require(msg.sender == idToProject[_id].creator, "Unauthorized access");
+        require(msg.sender == idToProject[_id].creator, "Unauthorized access. Only project owner can use this function");
+        _;
+    }
+
+    modifier onlyProjectDonor(uint256 _id) {
+        require(contributions[_id][msg.sender] > 0, "Unauthorized access. Only project funders can use this function." );
         _;
     }
 
@@ -247,11 +282,42 @@ contract CrowdFund {
         );
     }
 
+    /**@dev Function to create a request for withdrawal of funds
+    * @param _id Project ID
+    * @param _description  Purpose of withdrawal
+    * @param _amount Amount of withdrawal requested
+    */
+    function createWithdrawalRequest(
+        uint256 _id,
+        string memory _description,
+        uint256 _amount
+    ) public onlyProjectOwner(_id) {
+        // create new withdrawal request
+        WithdrawalRequest memory newWR = WithdrawalRequest({
+            description: _description,
+            withdrawalAmount: _amount,
+            // funds withdrawn to project owner
+            recipient: idToProject[_id].creator,
+            // initialized with no votes for request
+            approvedVotes: 0,
+            // state changes on quorum
+            currentWithdrawalState: Withdrawal.Reject
+        });
+
+        // update project to request mapping
+        idToWithdrawalRequests[_id] = newWR;
+
+        // emit event
+        emit NewWithdrawalRequest(_id, _description, _amount);
+    }
+
+
+
     /*===== Blockchain get functions =====*/
 
     /** @dev Function to get project details
-    * @param _id Project ID
-    */
+     * @param _id Project ID
+     */
     function getProjectDetails(uint256 _id)
         public
         view
