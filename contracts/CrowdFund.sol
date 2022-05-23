@@ -203,15 +203,41 @@ contract CrowdFund {
         );
     }
 
-    /** @dev Function to end fundraise for a project - Admin or project owner only
+    /** @dev Function to get refund on expired projects
      * @param _id Project ID
      */
-    function endFundraise(uint256 _id) public onlyAdmin onlyProjectOwner(_id) {
+    function getRefund(uint256 _id) public payable returns (bool) {
         require(
             block.timestamp > idToProject[_id].projectDeadline,
             "Project deadline hasn't been reached yet"
         );
-        
+
+        require(
+            contributions[_id][msg.sender] > 0,
+            "Not a contributor to this project"
+        );
+
+        // change project state
+        endFundraise(_id);
+
+        uint256 refundAmt = contributions[_id][msg.sender];
+
+        // if money is transfered
+        if (payable(msg.sender).send(refundAmt)) {
+            // no more contributions to the project
+            contributions[_id][msg.sender] = 0;
+            // reduce total amount pledged to the project
+            idToProject[_id].totalPledged -= refundAmt;
+            idToProject[_id].netDiff += refundAmt;
+
+            return true;
+        }
+    }
+
+    /** @dev Function to end fundraise for a project - Admin or project owner only
+     * @param _id Project ID
+     */
+    function endFundraise(uint256 _id) internal {
         idToProject[_id].currentState = State.Expire;
         emit ExpireFundraise(
             _id,
