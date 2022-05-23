@@ -76,11 +76,20 @@ contract CrowdFund {
 
     /*===== Modifiers =====*/
     modifier checkState(uint256 _id, State _state) {
-        Project memory newFR = idToProject[_id];
         require(
-            newFR.currentState == _state,
+            idToProject[_id].currentState == _state,
             "Unmatching states. Invalid operation"
         );
+        _;
+    }
+
+    modifier onlyAdmin() {
+        require(msg.sender == platformAdmin, "Unauthorized access");
+        _;
+    }
+
+    modifier onlyProjectOwner(uint256 _id) {
+        require(msg.sender == idToProject[_id].creator, "Unauthorized access");
         _;
     }
 
@@ -184,16 +193,6 @@ contract CrowdFund {
                 idToProject[_id].goal
             );
         }
-        // if time has run out -> expire
-        else if (block.timestamp > idToProject[_id].projectDeadline) {
-            idToProject[_id].currentState = State.Expire;
-            emit ExpireFundraise(
-                _id,
-                idToProject[_id].name,
-                idToProject[_id].projectDeadline,
-                idToProject[_id].goal
-            );
-        }
 
         emit FundsReceive(
             _id,
@@ -201,6 +200,24 @@ contract CrowdFund {
             msg.value,
             idToProject[_id].totalPledged,
             idToProject[_id].netDiff
+        );
+    }
+
+    /** @dev Function to end fundraise for a project - Admin or project owner only
+     * @param _id Project ID
+     */
+    function endFundraise(uint256 _id) public onlyAdmin onlyProjectOwner(_id) {
+        require(
+            block.timestamp > idToProject[_id].projectDeadline,
+            "Project deadline hasn't been reached yet"
+        );
+        
+        idToProject[_id].currentState = State.Expire;
+        emit ExpireFundraise(
+            _id,
+            idToProject[_id].name,
+            idToProject[_id].projectDeadline,
+            idToProject[_id].goal
         );
     }
 }

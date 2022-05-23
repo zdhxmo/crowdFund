@@ -8,18 +8,19 @@ const {
 const { BigNumber, utils } = require("ethers");
 
 contract('CrowdFund', accounts => {
-    it("creates a new project", async () => {
-        const crowdfund = await CrowdFund.deployed();
-        const goal = BigNumber.from(1);
-        const totalDays = await time.latest();
+    beforeEach(async () => {
+        initialDate = await time.latest();
+        crowdfund = await CrowdFund.deployed();
+        goal = BigNumber.from(1);
+    })
 
-        const receipt = await crowdfund.createNewProject("project1", "project description is descriptive", "ipfs:url_hash", totalDays, goal, { from: accounts[0] });
+    it("creates a new project", async () => {
+        const receipt = await crowdfund.createNewProject("project1", "project description is descriptive", "ipfs:url_hash", initialDate, goal, { from: accounts[0] });
         expectEvent(receipt, 'NewProjectCreated');
     });
 
 
     it('contributes to project', async () => {
-        const crowdfund = await CrowdFund.deployed();
         const sendTx = utils.parseUnits("1.0", 17);
 
         const fundsReceipt = await crowdfund.contributeFunds(1, { from: accounts[1], value: sendTx });
@@ -27,7 +28,6 @@ contract('CrowdFund', accounts => {
     });
 
     it('gives success if goal reached', async () => {
-        const crowdfund = await CrowdFund.deployed();
         const sendTx = utils.parseUnits("9.0", 17);
         const fundsReceipt = await crowdfund.contributeFunds(1, { from: accounts[1], value: sendTx });
 
@@ -36,25 +36,17 @@ contract('CrowdFund', accounts => {
     })
 
     // TODO: increase time and fail transaction
-    /* it('fails contribution is deadline expired', async () => {
-        const crowdfund = await CrowdFund.deployed();
-        const goal = BigNumber.from(1);
-        const totalDays = await time.latest();
-
-        const receipt = await crowdfund.createNewProject("project2", "project description is descriptive", "ipfs:url_hash", totalDays, goal, { from: accounts[0] });
+/*     it('fails contribution is deadline expired', async () => {
+        const receipt = await crowdfund.createNewProject("project2", "project description is descriptive", "ipfs:url_hash", initialDate, goal, { from: accounts[0] });
         expectEvent(receipt, 'NewProjectCreated');
 
-        // const sendTx = utils.parseUnits("9.0", 10);
-        // const fundsReceipt = await crowdfund.contributeFunds(2, { from: accounts[1], value: sendTx });
-        // expectEvent(fundsReceipt, 'FundsReceive');
-
         // increase time
-        await time.increaseTo(totalDays.add(time.duration.hours(1)));
+        await time.increaseTo(initialDate.add(time.duration.years(10)));
 
-        const sendTx2 = utils.parseUnits("9.0", 10);
-        const fundsReceipt2 = await crowdfund.contributeFunds(2, { from: accounts[2], value: sendTx2 });
-        expectRevert(fundsReceipt2, 'Contributions cannot be made to this project anymore.')
-        // expectEvent(fundsReceipt2, 'ExpireFundraise')
+        const sendTx2 = utils.parseUnits("1.0", 10);
+        await expectRevert(crowdfund.contributeFunds(2, { from: accounts[2], value: sendTx2 }), 'Contributions cannot be made to this project anymore.')
     }) */
+
+
 })
 

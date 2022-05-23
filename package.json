@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.7",
-    "chai": "^4.2.0",
+    "chai": "^4.3.6",
     "eslint": "8.16.0",
     "eslint-config-next": "12.1.6",
     "ethereum-waffle": "^3.0.0",
