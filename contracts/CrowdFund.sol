@@ -77,9 +77,12 @@ contract CrowdFund {
         uint256 netDiff;
         // current state of the fundraise
         State currentState;
+        // number of depositors
+        uint256 totalDepositors;
     }
 
     struct WithdrawalRequest {
+        uint32 index;
         // purpose of withdrawal
         string description;
         // amount of withdrawal requested
@@ -103,6 +106,9 @@ contract CrowdFund {
     mapping(uint256 => mapping(address => bool)) approvals;
     // withdrawal requests
     mapping(uint256 => WithdrawalRequest) idToWithdrawalRequests;
+    // project ID => withdrawal request Index
+    mapping(uint256 => uint32) latestWithdrawalIndex;
+
 
     /*===== Modifiers =====*/
     modifier checkState(uint256 _id, State _state) {
@@ -128,6 +134,11 @@ contract CrowdFund {
         _;
     }
 
+    modifier checkLatestWithdrawalIndex(uint256 _id, uint32 _withdrawalRequestIndex) {
+        require(latestWithdrawalIndex[_id] == _withdrawalRequestIndex, "This is not the latest withdrawal request. Please check again and try later");
+        _;
+    }
+
     constructor() {
         platformAdmin = payable(msg.sender);
         projectCount = 0;
@@ -137,6 +148,7 @@ contract CrowdFund {
     fallback() external payable {}
 
     receive() external payable {}
+
 
     /*===== Functions  =====*/
 
@@ -174,7 +186,8 @@ contract CrowdFund {
             totalPledged: 0,
             goal: _goal,
             netDiff: _goal,
-            currentState: State.Fundraise
+            currentState: State.Fundraise,
+            totalDepositors: 0
         });
 
         // update mapping of id to new project
@@ -214,6 +227,12 @@ contract CrowdFund {
 
         // reduce money left from the goal
         idToProject[_id].netDiff -= msg.value;
+
+        // add one to total number of depositors for this project
+        idToProject[_id].totalDepositors.add(1);
+
+        // set withdrawal approval to false
+        approvals[_id][msg.sender] = false;
 
         // check if goal is reached within timeframe -> success
         if (
@@ -284,16 +303,20 @@ contract CrowdFund {
 
     /**@dev Function to create a request for withdrawal of funds
     * @param _id Project ID
+    * @param _requestNumber Index of the request
     * @param _description  Purpose of withdrawal
     * @param _amount Amount of withdrawal requested
     */
     function createWithdrawalRequest(
         uint256 _id,
+        uint32 _requestNumber,
         string memory _description,
         uint256 _amount
-    ) public onlyProjectOwner(_id) {
+    ) public onlyProjectOwner(_id) checkState(_id, State.Success){
+
         // create new withdrawal request
         WithdrawalRequest memory newWR = WithdrawalRequest({
+            index: _requestNumber,
             description: _description,
             withdrawalAmount: _amount,
             // funds withdrawn to project owner
@@ -306,12 +329,46 @@ contract CrowdFund {
 
         // update project to request mapping
         idToWithdrawalRequests[_id] = newWR;
+        
+        latestWithdrawalIndex[_id] = _requestNumber;
 
         // emit event
         emit NewWithdrawalRequest(_id, _description, _amount);
     }
 
+    /**@dev Function to approve withdrawal of funds
+    * @param _id Project ID
+    * @param _withdrawalRequestIndex Index of withdrawal request
+    */
+    function approveWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public view onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
+        idToWithdrawalRequests[_id].approvedVotes.add(1);
+    }
 
+/**@dev Function to reject withdrawal of funds
+    * @param _id Project ID
+    * @param _withdrawalRequestIndex Index of withdrawal request
+    */
+    function rejectWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public view onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
+        idToWithdrawalRequests[_id].approvedVotes.sub(1);
+    }
+
+    /**@dev Function to transfer funds to project creator
+    * @param _id Project ID
+    * @param _withdrawalRequestIndex Index of withdrawal request
+    */
+    function transferWithdrawalRequestFunds(uint256 _id, uint32 _withdrawalRequestIndex) public payable onlyProjectOwner(_id) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex) {
+
+        // require quorum
+        require(idToWithdrawalRequests[_id].approvedVotes > (idToProject[_id].totalDepositors).div(2), "More than half the total depositors need to approve withdrawal request" );
+
+        // transfer funds to project creator
+        payable(idToProject[_id].creator).transfer(idToWithdrawalRequests[_id].withdrawalAmount);
+
+        // approved votes set to 0 for the next request cycle
+        idToWithdrawalRequests[_id].approvedVotes = 0;
+    }
+
+    
 
     /*===== Blockchain get functions =====*/
 
