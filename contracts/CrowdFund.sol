@@ -246,4 +246,35 @@ contract CrowdFund {
             idToProject[_id].goal
         );
     }
+
+    /*===== Blockchain get functions =====*/
+
+    /** @dev Function to get project details
+    * @param _id Project ID
+    */
+    function getProjectDetails(uint256 _id)
+        public
+        view
+        returns (
+            address creator,
+            string memory name,
+            string memory description,
+            string memory image,
+            uint256 projectDeadline,
+            uint256 totalPledged,
+            uint256 goal,
+            uint256 netDiff,
+            State currentState
+        )
+    {
+        creator = idToProject[_id].creator;
+        name = idToProject[_id].name;
+        description = idToProject[_id].description;
+        image = idToProject[_id].image;
+        projectDeadline = idToProject[_id].projectDeadline;
+        totalPledged = idToProject[_id].totalPledged;
+        goal = idToProject[_id].goal;
+        netDiff = idToProject[_id].netDiff;
+        currentState = idToProject[_id].currentState;
+    }
 }
