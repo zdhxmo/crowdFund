@@ -44,6 +44,12 @@ contract CrowdFund {
 
     event GenerateRefund(uint256 indexed id, address refundRequestUser, uint256 refundAmt);
 
+    event ApproveRequest(uint256 indexed _id, uint32 _withdrawalRequestIndex);
+
+    event RejectRequest(uint256 indexed _id, uint32 _withdrawalRequestIndex);
+
+    event TransferRequestFunds(uint256 indexed _id, uint32 _withdrawalRequestIndex);
+
     /*===== State variables =====*/
     address payable platformAdmin;
 
@@ -77,10 +83,12 @@ contract CrowdFund {
         uint256 goal;
         // how far from the goal
         uint256 netDiff;
-        // current state of the fundraise
-        State currentState;
         // number of depositors
         uint256 totalDepositors;
+        // total funds withdrawn from project
+        uint256 totalWithdrawn;
+        // current state of the fundraise
+        State currentState;
     }
 
     struct WithdrawalRequest {
@@ -104,7 +112,7 @@ contract CrowdFund {
     mapping(uint256 => mapping(address => uint256)) public contributions;
 
     // withdrawal requests
-    mapping(uint256 => WithdrawalRequest) idToWithdrawalRequests;
+    mapping(uint256 => WithdrawalRequest) public idToWithdrawalRequests;
     // project ID => withdrawal request Index
     mapping(uint256 => uint32) latestWithdrawalIndex;
 
@@ -186,7 +194,8 @@ contract CrowdFund {
             goal: _goal,
             netDiff: _goal,
             currentState: State.Fundraise,
-            totalDepositors: 0
+            totalDepositors: 0,
+            totalWithdrawn: 0
         });
 
         // update mapping of id to new project
@@ -213,6 +222,8 @@ contract CrowdFund {
     {
         require(_id <= projectCount, "Project ID out of range");
 
+        require(msg.value > 0, "Invalid transaction. Please send valid amounts to the project");
+
         require(
             block.timestamp <= idToProject[_id].projectDeadline,
             "Contributions cannot be made to this project anymore."
@@ -228,7 +239,7 @@ contract CrowdFund {
         idToProject[_id].netDiff -= msg.value;
 
         // add one to total number of depositors for this project
-        idToProject[_id].totalDepositors.add(1);
+        idToProject[_id].totalDepositors += 1;
 
         // check if goal is reached within timeframe -> success
         if (
@@ -256,14 +267,14 @@ contract CrowdFund {
     /** @dev Function to get refund on expired projects
      * @param _id Project ID
      */
-    function getRefund(uint256 _id) public payable onlyProjectDonor(_id) {
+    function getRefund(uint256 _id) public payable onlyProjectDonor(_id) checkState(_id, State.Expire) {
         require(
             block.timestamp > idToProject[_id].projectDeadline,
             "Project deadline hasn't been reached yet"
         );
 
         // change project state
-        endFundraise(_id);
+        // endFundraise(_id);
 
         uint256 refundAmt = contributions[_id][msg.sender];
 
@@ -277,27 +288,26 @@ contract CrowdFund {
         }
         
         emit GenerateRefund(_id, msg.sender, refundAmt);
-
     }
 
     /** @dev Function to end fundraise for a project - Admin or project owner only
      * @param _id Project ID
      */
-    function endFundraise(uint256 _id) internal {
-        idToProject[_id].currentState = State.Expire;
-        emit ExpireFundraise(
-            _id,
-            idToProject[_id].name,
-            idToProject[_id].projectDeadline,
-            idToProject[_id].goal
-        );
-    }
+    // function endFundraise(uint256 _id) internal {
+    //     idToProject[_id].currentState = State.Expire;
+    //     emit ExpireFundraise(
+    //         _id,
+    //         idToProject[_id].name,
+    //         idToProject[_id].projectDeadline,
+    //         idToProject[_id].goal
+    //     );
+    // }
 
     /** @dev Function to create a request for withdrawal of funds
     * @param _id Project ID
     * @param _requestNumber Index of the request
     * @param _description  Purpose of withdrawal
-    * @param _amount Amount of withdrawal requested
+    * @param _amount Amount of withdrawal requested in Wei
     */
     function createWithdrawalRequest(
         uint256 _id,
@@ -305,6 +315,7 @@ contract CrowdFund {
         string memory _description,
         uint256 _amount
     ) public onlyProjectOwner(_id) checkState(_id, State.Success){
+        require(idToProject[_id].totalWithdrawn < idToProject[_id].totalPledged, "Insufficient funds");
 
         // create new withdrawal request
         WithdrawalRequest memory newWR = WithdrawalRequest({
@@ -332,16 +343,19 @@ contract CrowdFund {
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
     */
-    function approveWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public view onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
-        idToWithdrawalRequests[_id].approvedVotes.add(1);
+    function approveWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
+        idToWithdrawalRequests[_id].approvedVotes += 1;
+        emit ApproveRequest(_id, _withdrawalRequestIndex);
     }
 
     /** @dev Function to reject withdrawal of funds
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
     */
-    function rejectWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public view onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
-        idToWithdrawalRequests[_id].approvedVotes.sub(1);
+    function rejectWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
+        idToWithdrawalRequests[_id].approvedVotes -= 1;
+        emit RejectRequest(_id, _withdrawalRequestIndex);
+
     }
 
     /** @dev Function to transfer funds to project creator
@@ -358,6 +372,10 @@ contract CrowdFund {
 
         // approved votes set to 0 for the next request cycle
         idToWithdrawalRequests[_id].approvedVotes = 0;
+
+        idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id].withdrawalAmount;
+
+        emit TransferRequestFunds(_id, _withdrawalRequestIndex);
     }
 
     
