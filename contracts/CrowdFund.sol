@@ -367,8 +367,8 @@ contract CrowdFund {
         // require quorum
         require(idToWithdrawalRequests[_id].approvedVotes > (idToProject[_id].totalDepositors).div(2), "More than half the total depositors need to approve withdrawal request" );
 
-        // platform fee - $2 for every $100 withdrawn
-        uint256 platformFee = idToWithdrawalRequests[_id].withdrawalAmount / 50;
+        // platform fee - $1 for every $100 withdrawn
+        uint256 platformFee = idToWithdrawalRequests[_id].withdrawalAmount / 100;
         platformAdmin.transfer(platformFee);
 
         // transfer remaining funds to project creator
