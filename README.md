@@ -1,34 +1,17 @@
-# CrowDFund
+# CrowdFund
 
-To compile the contracts:
+Start a testnet with Ganache on port 8545 (http://localhost:8545)
+
+To compile and migrate the contracts onto testnet:
 
 ```
-npx hardhat compile
+truffle migrate
 ```
 
 To run unit tests:
 
 ```
-npx hardhat test
-```
-
-To run a testnet node and deploy contracts on it:
-
-```
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
-
-To deploy contracts onto a network
-
-```
-npx hardhat run scripts/deploy.js --network <network-name>
-```
-
-For additional help:
-
-```
-npx hardhat help
+truffle test
 ```
 
 ## Getting Started with the frontend

@@ -290,19 +290,6 @@ contract CrowdFund {
         emit GenerateRefund(_id, msg.sender, refundAmt);
     }
 
-    /** @dev Function to end fundraise for a project - Admin or project owner only
-     * @param _id Project ID
-     */
-    // function endFundraise(uint256 _id) internal {
-    //     idToProject[_id].currentState = State.Expire;
-    //     emit ExpireFundraise(
-    //         _id,
-    //         idToProject[_id].name,
-    //         idToProject[_id].projectDeadline,
-    //         idToProject[_id].goal
-    //     );
-    // }
-
     /** @dev Function to create a request for withdrawal of funds
     * @param _id Project ID
     * @param _requestNumber Index of the request
