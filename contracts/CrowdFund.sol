@@ -42,6 +42,8 @@ contract CrowdFund {
         uint256 amount
     );
 
+    event GenerateRefund(uint256 indexed id, address refundRequestUser, uint256 refundAmt);
+
     /*===== State variables =====*/
     address payable platformAdmin;
 
@@ -101,9 +103,6 @@ contract CrowdFund {
     // project id => contributor => contribution
     mapping(uint256 => mapping(address => uint256)) public contributions;
 
-    // withdrawal approvals
-    // project id => approver => vote bool
-    mapping(uint256 => mapping(address => bool)) approvals;
     // withdrawal requests
     mapping(uint256 => WithdrawalRequest) idToWithdrawalRequests;
     // project ID => withdrawal request Index
@@ -231,9 +230,6 @@ contract CrowdFund {
         // add one to total number of depositors for this project
         idToProject[_id].totalDepositors.add(1);
 
-        // set withdrawal approval to false
-        approvals[_id][msg.sender] = false;
-
         // check if goal is reached within timeframe -> success
         if (
             idToProject[_id].totalPledged >= idToProject[_id].goal &&
@@ -260,15 +256,10 @@ contract CrowdFund {
     /** @dev Function to get refund on expired projects
      * @param _id Project ID
      */
-    function getRefund(uint256 _id) public payable returns (bool) {
+    function getRefund(uint256 _id) public payable onlyProjectDonor(_id) {
         require(
             block.timestamp > idToProject[_id].projectDeadline,
             "Project deadline hasn't been reached yet"
-        );
-
-        require(
-            contributions[_id][msg.sender] > 0,
-            "Not a contributor to this project"
         );
 
         // change project state
@@ -278,14 +269,15 @@ contract CrowdFund {
 
         // if money is transfered
         if (payable(msg.sender).send(refundAmt)) {
-            // no more contributions to the project
+            // no more contributions to the project from this user
             contributions[_id][msg.sender] = 0;
             // reduce total amount pledged to the project
             idToProject[_id].totalPledged -= refundAmt;
             idToProject[_id].netDiff += refundAmt;
-
-            return true;
         }
+        
+        emit GenerateRefund(_id, msg.sender, refundAmt);
+
     }
 
     /** @dev Function to end fundraise for a project - Admin or project owner only
@@ -301,7 +293,7 @@ contract CrowdFund {
         );
     }
 
-    /**@dev Function to create a request for withdrawal of funds
+    /** @dev Function to create a request for withdrawal of funds
     * @param _id Project ID
     * @param _requestNumber Index of the request
     * @param _description  Purpose of withdrawal
@@ -336,7 +328,7 @@ contract CrowdFund {
         emit NewWithdrawalRequest(_id, _description, _amount);
     }
 
-    /**@dev Function to approve withdrawal of funds
+    /** @dev Function to approve withdrawal of funds
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
     */
@@ -344,7 +336,7 @@ contract CrowdFund {
         idToWithdrawalRequests[_id].approvedVotes.add(1);
     }
 
-/**@dev Function to reject withdrawal of funds
+    /** @dev Function to reject withdrawal of funds
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
     */
@@ -352,7 +344,7 @@ contract CrowdFund {
         idToWithdrawalRequests[_id].approvedVotes.sub(1);
     }
 
-    /**@dev Function to transfer funds to project creator
+    /** @dev Function to transfer funds to project creator
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
     */
@@ -373,8 +365,8 @@ contract CrowdFund {
     /*===== Blockchain get functions =====*/
 
     /** @dev Function to get project details
-     * @param _id Project ID
-     */
+    * @param _id Project ID
+    */
     function getProjectDetails(uint256 _id)
         public
         view

@@ -6,10 +6,12 @@ const {
     time
 } = require('@openzeppelin/test-helpers');
 const { BigNumber, utils } = require("ethers");
+const { advanceTimeAndBlock } = require("./utils/time");
 
 contract('CrowdFund', accounts => {
     beforeEach(async () => {
-        initialDate = await time.latest();
+        // initialDate = await time.latest();
+        initialDate = new Date().getTime()
         crowdfund = await CrowdFund.deployed();
         goal = BigNumber.from(1);
     })
@@ -35,18 +37,21 @@ contract('CrowdFund', accounts => {
         expectEvent(fundsReceipt, 'SuccessFundRaise');
     })
 
-    // TODO: increase time and fail transaction
-/*     it('fails contribution is deadline expired', async () => {
-        const receipt = await crowdfund.createNewProject("project2", "project description is descriptive", "ipfs:url_hash", initialDate, goal, { from: accounts[0] });
-        expectEvent(receipt, 'NewProjectCreated');
+    // TODO: tests for the rest of the functions
+    // it('fails contribution is deadline expired', async () => {
+    //     const receipt = await crowdfund.createNewProject("project2", "project description is descriptive", "ipfs:url_hash", initialDate, goal, { from: accounts[0] });
+    //     expectEvent(receipt, 'NewProjectCreated');
 
-        // increase time
-        await time.increaseTo(initialDate.add(time.duration.years(10)));
+    //     // increase time
+    //     const advancement = 86400 * 2
+    //     await advanceTimeAndBlock(advancement)
 
-        const sendTx2 = utils.parseUnits("1.0", 10);
-        await expectRevert(crowdfund.contributeFunds(2, { from: accounts[2], value: sendTx2 }), 'Contributions cannot be made to this project anymore.')
-    }) */
+    //     const sendTx2 = utils.parseUnits("1.0", 10);
+    //     await expectRevert(crowdfund.contributeFunds(2, { from: accounts[2], value: sendTx2 }), 'Contributions cannot be made to this project anymore.')
+    // })
 
 
 })
+
+
 
