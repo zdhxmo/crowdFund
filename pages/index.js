@@ -1,9 +1,3 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import { useContext } from 'react'
-import { AccountContext } from '../context'
-import { useRouter } from 'next/router'
 import {
   contractAddress, platformAdmin
 } from '../config'
@@ -24,18 +18,21 @@ export default function Home({ projects }) {
           <div className='my-3'> 3. If fundraising expires without goal being met, contributors appeal to get their refunds back.  </div>
         </div>
       </div>
-      <div>
-        {
-          projects.map((project, index) => (
-            <Link href={`/project/${project[2]}`} key={index}>
-              <a>
-                <div>
-                  <p>{project[1]}</p>
+      <div className='text-black'>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+          {
+            projects.map((project, i) => (
+              <div key={i} className="border shadow rounded-xl overflow-hidden">
+                <div className="p-4">
+                  <p style={{ height: '64px' }} className="text-2xl font-semibold">{project[2]}</p>
+                  <div style={{ height: '70px', overflow: 'hidden' }}>
+                    <p className="text-gray-400">{project[3]}</p>
+                  </div>
                 </div>
-              </a>
-            </Link>
-          ))
-        }
+              </div>
+            ))
+          }
+        </div>
       </div>
     </div>
   )

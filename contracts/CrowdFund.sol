@@ -386,7 +386,8 @@ contract CrowdFund {
             uint256 totalPledged,
             uint256 goal,
             uint256 netDiff,
-            State currentState
+            State currentState,
+            string memory url
         )
     {
         creator = idToProject[_id].creator;
@@ -397,6 +398,7 @@ contract CrowdFund {
         goal = idToProject[_id].goal;
         netDiff = idToProject[_id].netDiff;
         currentState = idToProject[_id].currentState;
+        url = idToProject[_id].ipfsURL;
     }
 
     function getAllProjects() public view returns (Project[] memory) {
@@ -409,5 +411,9 @@ contract CrowdFund {
             projects[i] = currentItem;
         }
         return projects;
+    }
+
+    function getProjectURL(uint256 _id) public view returns(string memory url) {
+        url = idToProject[_id].ipfsURL;
     }
 }
