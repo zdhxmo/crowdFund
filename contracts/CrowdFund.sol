@@ -73,8 +73,6 @@ contract CrowdFund {
         string name;
         // description of the project
         string description;
-        // IPFS url hash of project image
-        string image;
         // end of fundraising date
         uint256 projectDeadline;
         // total amount that has been pledged until this point
@@ -89,6 +87,8 @@ contract CrowdFund {
         uint256 totalWithdrawn;
         // current state of the fundraise
         State currentState;
+        // holds URL of IPFS upload
+        string ipfsURL;
     }
 
     struct WithdrawalRequest {
@@ -162,16 +162,15 @@ contract CrowdFund {
     /** @dev Function to start a new project.
      * @param _name Name of the project
      * @param _description Project Description
-     * @param _imageURL IPFS url of image
      * @param _projectDeadlineDays Total days to end of fundraise
      * @param _goalEth Project goal in ETH
      */
     function createNewProject(
         string memory _name,
         string memory _description,
-        string memory _imageURL,
         uint256 _projectDeadlineDays,
-        uint256 _goalEth
+        uint256 _goalEth,
+        string memory _ipfsURL
     ) public {
         // update ID
         projectCount = projectCount.add(1);
@@ -188,14 +187,14 @@ contract CrowdFund {
             creator: msg.sender,
             name: _name,
             description: _description,
-            image: _imageURL,
             projectDeadline: _projectDeadline + block.timestamp,
             totalPledged: 0,
             goal: _goal,
             netDiff: _goal,
             currentState: State.Fundraise,
             totalDepositors: 0,
-            totalWithdrawn: 0
+            totalWithdrawn: 0,
+            ipfsURL: _ipfsURL
         });
 
         // update mapping of id to new project
@@ -383,7 +382,6 @@ contract CrowdFund {
             address creator,
             string memory name,
             string memory description,
-            string memory image,
             uint256 projectDeadline,
             uint256 totalPledged,
             uint256 goal,
@@ -394,7 +392,6 @@ contract CrowdFund {
         creator = idToProject[_id].creator;
         name = idToProject[_id].name;
         description = idToProject[_id].description;
-        image = idToProject[_id].image;
         projectDeadline = idToProject[_id].projectDeadline;
         totalPledged = idToProject[_id].totalPledged;
         goal = idToProject[_id].goal;

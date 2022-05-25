@@ -7,8 +7,9 @@ import { useRouter } from 'next/router'
 import {
   contractAddress, platformAdmin
 } from '../config'
-import CrownFund from "../build/contracts/CrowdFund.json"
+import CrowdFund from "../build/contracts/CrowdFund.json"
 import { ethers } from 'ethers'
+import Link from 'next/link'
 
 export default function Home({ projects }) {
   return (
@@ -43,7 +44,7 @@ export default function Home({ projects }) {
 export async function getServerSideProps() {
   // let provider = `https://ropsten.infura.io/v3/db0b4735bad24926a761d909e1f82576`
   let provider = new ethers.providers.JsonRpcProvider()
-  const contract = new ethers.Contract(contractAddress, CrownFund.abi, provider)
+  const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
   const data = await contract.getAllProjects()
   return {
     props: {

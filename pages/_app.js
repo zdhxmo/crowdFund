@@ -63,7 +63,7 @@ function MyApp({ Component, pageProps }) {
 
 
           <div>
-            <Link href="/createFR">
+            <Link href="/create">
               <button className='rounded-md my-10 bg-pink-500 text-white p-3 mx-4' >Create</button>
             </Link>
 
