@@ -401,4 +401,16 @@ contract CrowdFund {
         netDiff = idToProject[_id].netDiff;
         currentState = idToProject[_id].currentState;
     }
+
+    function getAllProjects() public view returns (Project[] memory) {
+        uint256 _projectCount = projectCount;
+
+        Project[] memory projects = new Project[](_projectCount);
+        for(uint i = 0; i < _projectCount; i++) {
+            uint256 currentId = i + 1;
+            Project storage currentItem = idToProject[currentId];
+            projects[i] = currentItem;
+        }
+        return projects;
+    }
 }
