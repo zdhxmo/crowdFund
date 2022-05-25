@@ -39,16 +39,16 @@ function MyApp({ Component, pageProps }) {
 
 
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-screen w-screen font-mono'>
       <div className='sm:h-10'>
-        <nav className='flex mx-auto text-black bg-slate-600'>
+        <nav className='flex mx-auto text-black-20/100'>
           <Link href="/">
             <a>
               <img src="/logo.png" alt="crowdFund logo" className='h-20 object-contain my-5' />
             </a>
           </Link>
 
-          <div className='rounded-md my-10 p-3 mx-4 bg-stone-200'>
+          <div className='rounded-md my-10 p-3 mx-4 bg-pink-500 text-white'>
             {
               !account && (
                 <div>
@@ -63,20 +63,16 @@ function MyApp({ Component, pageProps }) {
 
 
           <div>
-            <Link href="/howItWorks" className='px-2'>
-              <button className='rounded-md my-10 bg-stone-200 p-3 mx-4' >How it Works</button>
-            </Link>
-
             <Link href="/createFR">
-              <button className='rounded-md my-10 bg-stone-200 p-3 mx-4' >Create Fundraise</button>
+              <button className='rounded-md my-10 bg-pink-500 text-white p-3 mx-4' >Create</button>
             </Link>
 
-            <Link href="/withdrawals">
-              <button className='rounded-md my-10 bg-stone-200 p-3 mx-4' >Withdraw</button>
+            <Link href="/withdrawal">
+              <button className='rounded-md my-10 bg-pink-500 text-white p-3 mx-4' >Withdraw</button>
             </Link>
 
-            <Link href="/requestRefund">
-              <button className='rounded-md my-10 bg-stone-200 p-3 mx-4' >Refund</button>
+            <Link href="/refund">
+              <button className='rounded-md my-10 bg-pink-500 text-white p-3 mx-4' >Refund</button>
             </Link>
           </div>
         </nav>
