@@ -106,7 +106,7 @@ contract CrowdFund {
     }
 
     // project states
-    uint256 private projectCount;
+    uint256 public projectCount;
     mapping(uint256 => Project) public idToProject;
     // project id => contributor => contribution
     mapping(uint256 => mapping(address => uint256)) public contributions;
@@ -173,7 +173,7 @@ contract CrowdFund {
         string memory _ipfsURL
     ) public {
         // update ID
-        projectCount = projectCount.add(1);
+        projectCount += 1;
 
         // calculate total seconds to project deadline
         // uint256 _projectDeadline = _projectDeadlineDays * 86400;
@@ -366,6 +366,19 @@ contract CrowdFund {
         idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id].withdrawalAmount;
 
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
+
+    }
+
+    /** @dev Function to update project IPFS hash on payment deposit
+    * @param _id Project ID
+    * @param _url new IPFS hash
+    * @param _newPledged Amount pledged by contributor
+    * TODO: find a way to make this functionality internal. This CANNOT be a public function
+    */
+    function updateProject(uint256 _id, string memory _url, uint256 _newPledged) public {
+        idToProject[_id].ipfsURL = _url;
+        idToProject[_id].totalPledged += _newPledged;
+        idToProject[_id].netDiff -= _newPledged;
     }
 
     
@@ -415,5 +428,9 @@ contract CrowdFund {
 
     function getProjectURL(uint256 _id) public view returns(string memory url) {
         url = idToProject[_id].ipfsURL;
+    }
+
+    function getProjectCount() public view returns(uint256 count) {
+        count = projectCount;
     }
 }

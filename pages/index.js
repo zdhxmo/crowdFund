@@ -24,6 +24,7 @@ export default function Home({ projects }) {
             projects.map((project, i) => (
               <div key={i} className="border shadow rounded-xl overflow-hidden">
                 <div className="p-4">
+                  <p>ID: {BigNumber.from(project[0]).toNumber()}</p>
                   <p className="my-6 text-2xl font-semibold">{project[2]}</p>
                   <div>
                     <p className="my-3 text-gray-400">{project[3]}</p>
@@ -35,7 +36,7 @@ export default function Home({ projects }) {
                     } </p>
 
                     <p className="my-3"> Total Pledged:  {
-                      BigNumber.from(project[5]).toNumber()
+                      BigNumber.from(project[5]).toString()
                     } </p>
 
                     <p className="my-3"> Goal:  {

@@ -4,7 +4,7 @@ import { useState } from 'react' // new
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 import { useRouter } from 'next/router'
 import Web3Modal from 'web3modal'
-import { ethers } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 import CrowdFund from "../build/contracts/CrowdFund.json"
@@ -12,10 +12,29 @@ import {
   contractAddress
 } from '../config'
 
-const initialState = { name: '', description: '', projectDeadline: '', goal: '', totalPledged: 0 };
+const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: '', totalPledged: 0 };
+
 const create = () => {
   const router = useRouter()
   const [project, setProject] = useState(initialState)
+
+  let count, countParsed;
+
+  async function getProjectCount() {
+    const web3Modal = new Web3Modal()
+    const connection = await web3Modal.connect()
+    const provider = new ethers.providers.Web3Provider(connection)
+    const signer = provider.getSigner()
+
+    try {
+      let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+      count = await contract.getProjectCount()
+      countParsed = BigNumber.from(count).toNumber() + 1
+
+    } catch (err) {
+      window.alert(err)
+    }
+  }
 
   async function uploadToIPFS() {
     // destructure project state
@@ -23,9 +42,10 @@ const create = () => {
     // checks in place
     if (!name || !description || !projectDeadline || !goal) return
 
+
     // stringify JSON data
     const data = JSON.stringify({
-      name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0
+      id: countParsed, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0
     });
 
     try {
@@ -41,11 +61,14 @@ const create = () => {
 
   async function saveProject() {
     const { name, description, projectDeadline, goal } = project
+
+    await getProjectCount();
+
     // upload content to IPFS
     const url = await uploadToIPFS()
-    const web3Modal = new Web3Modal()
 
     // connect to web3 and get signer account
+    const web3Modal = new Web3Modal()
     const connection = await web3Modal.connect()
     const provider = new ethers.providers.Web3Provider(connection)
     const signer = provider.getSigner()
@@ -68,7 +91,7 @@ const create = () => {
   return (
     <div className="min-h-screen my-20 w-screen p-5">
       <main>
-        <div className="rounded-md my-10 bg-pink-500 text-white p-3 mx-4 w-40"><Link href="/"> Back to Home</Link></div>
+        <div className="rounded-md my-10 bg-pink-500 text-white p-3 w-20"><Link href="/"> Home </Link></div>
         <p className="text-center text-lg my-5">Create a new campaign!</p>
 
         <div className="bg-pink-500 text-black h-50 p-10 flex flex-col">
