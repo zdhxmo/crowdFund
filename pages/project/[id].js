@@ -8,10 +8,11 @@ import { useState } from 'react' // new
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 
 const ipfsURI = 'https://ipfs.io/ipfs/'
 
-export default function project({ project }) {
+export default function project({ project, projectID }) {
   const router = useRouter()
 
   const [contributionValue, setContributionValue] = useState(0);
@@ -56,12 +57,12 @@ export default function project({ project }) {
       router.push('/')
 
     } catch (err) {
-      window.alert(err)
+      window.alert(err.message)
     }
   }
 
   return (
-    <div className='grid mt-20'>
+    <div className='grid mt-20 grid-cols-1'>
       <div className='bg-pink-500 text-white p-20 text-center rounded-md mx-20 mt-20'>
         {/* <p className='my-6'><span className='font-bold'> Project Number: </span> {BigNumber.from(project.id).toNumber()}</p> */}
         <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>
@@ -78,9 +79,21 @@ export default function project({ project }) {
           className='p-2 my-2 rounded-md text-black'
           value={contributionValue}
         />
-        <button onClick={contribute} className='rounded-md my-10 bg-white text-pink-500 p-3 mx-4 shadow-md'>Contribute</button>
+        <button onClick={contribute} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-md'>Contribute</button>
+      </div>
+
+      <div className='grid grid-cols-3 px-10'>
+        <Link href={`withdrawal/${projectID}`}>
+          <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Create Withdrawal Request</button>
+        </Link>
+
+        <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject request</button>
+
+        <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
 
       </div>
+
+
     </div>
   )
 }
@@ -107,7 +120,8 @@ export async function getStaticProps({ params }) {
 
   return {
     props: {
-      project: data
+      project: data,
+      projectID: id
     },
   }
 }
