@@ -30,7 +30,6 @@ const create = () => {
       let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
       count = await contract.getProjectCount()
       countParsed = BigNumber.from(count).toNumber() + 1
-
     } catch (err) {
       window.alert(err)
     }

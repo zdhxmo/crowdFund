@@ -5,28 +5,36 @@ import CrowdFund from "../../build/contracts/CrowdFund.json"
 import { BigNumber, ethers, web3 } from 'ethers'
 import Web3Modal from 'web3modal'
 import { useState } from 'react' // new
+import { create as ipfsHttpClient } from 'ipfs-http-client'
+const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
+import { useRouter } from 'next/router'
 
 const ipfsURI = 'https://ipfs.io/ipfs/'
 
 export default function project({ project }) {
+  const router = useRouter()
+
   const [contributionValue, setContributionValue] = useState(0);
 
-  // async function updateIPFS() {
-  //   // stringify JSON data
-  //   const data = JSON.stringify({
-  //     id: project.id, name: project.name, description: project.description, projectDeadline: project.projectDeadline, goal: project.goal, totalPledged: contributionValue
-  //   });
+  async function updateIPFS() {
+    const { id, name, description, projectDeadline, goal, totalPledged } = project
 
-  //   try {
-  //     // use client to add data
-  //     const added = await client.add(data)
-  //     // return url
-  //     const url = `${added.path}`
-  //     return url
-  //   } catch (error) {
-  //     console.log('Error uploading file: ', error)
-  //   }
-  // }
+    let contri = Number(totalPledged) + Number(contributionValue)
+    // stringify JSON data
+    const data = JSON.stringify({
+      id: id, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: contri
+    });
+
+    try {
+      // use client to add data
+      const added = await client.add(data)
+      // return url
+      const url = `${added.path}`
+      return url
+    } catch (error) {
+      console.log('Error uploading file: ', error)
+    }
+  }
 
   async function contribute() {
     const web3Modal = new Web3Modal()
@@ -41,10 +49,12 @@ export default function project({ project }) {
       })
       await transaction.wait()
 
-      // const url = await updateIPFS()
+      const url = await updateIPFS()
 
-      // let projectUpdate = await contract.updateProject(project.id, url, contributionValue)
-      // await projectUpdate.wait()
+      let projectUpdate = await contract.updateProject(project.id, url, contributionValue)
+      await projectUpdate.wait()
+      router.push('/')
+
     } catch (err) {
       window.alert(err)
     }
@@ -53,7 +63,8 @@ export default function project({ project }) {
   return (
     <div className='grid mt-20'>
       <div className='bg-pink-500 text-white p-20 text-center rounded-md mx-20 mt-20'>
-        <p className='my-6'><span className='font-bold'> Project Number: </span> {BigNumber.from(project.id).toNumber()}</p>
+        {/* <p className='my-6'><span className='font-bold'> Project Number: </span> {BigNumber.from(project.id).toNumber()}</p> */}
+        <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>
         <p className='my-6'><span className='font-bold'> Project Name: </span> {project.name}</p>
         <p className='my-6'><span className='font-bold'>Description:</span> {project.description}</p>
         <p className='my-6'><span className='font-bold'>Crowdfund deadline:</span> {new Date((BigNumber.from(project.projectDeadline).toNumber()) * 1000).toLocaleDateString()}</p>

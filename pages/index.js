@@ -36,8 +36,8 @@ export default function Home({ projects }) {
                     } </p>
 
                     <p className="my-3"> Total Pledged:  {
-                      BigNumber.from(project[5]).toString()
-                    } </p>
+                      ethers.utils.formatEther(project[5])
+                    } ETH</p>
 
                     <p className="my-3"> Goal:  {
                       ethers.utils.formatEther(project[6])
