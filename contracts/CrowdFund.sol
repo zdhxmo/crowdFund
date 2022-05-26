@@ -106,7 +106,7 @@ contract CrowdFund {
     }
 
     // project states
-    uint256 public projectCount;
+    uint256 private projectCount;
     mapping(uint256 => Project) public idToProject;
     // project id => contributor => contribution
     mapping(uint256 => mapping(address => uint256)) public contributions;

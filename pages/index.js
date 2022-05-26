@@ -1,14 +1,14 @@
 import {
-  contractAddress, platformAdmin
+  contractAddress
 } from '../config'
 import CrowdFund from "../build/contracts/CrowdFund.json"
-import { ethers } from 'ethers'
+import { ethers, BigNumber } from 'ethers'
 import Link from 'next/link'
 
 export default function Home({ projects }) {
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
-      <p className='text-center'>this test project only works on localhost and ropsten network </p>
+      <p className='text-center'>this test project only works on ropsten testnet </p>
 
       <div className='bg-pink-500 text-white p-10 text-center rounded-md'>
         <div>
@@ -24,10 +24,29 @@ export default function Home({ projects }) {
             projects.map((project, i) => (
               <div key={i} className="border shadow rounded-xl overflow-hidden">
                 <div className="p-4">
-                  <p style={{ height: '64px' }} className="text-2xl font-semibold">{project[2]}</p>
-                  <div style={{ height: '70px', overflow: 'hidden' }}>
-                    <p className="text-gray-400">{project[3]}</p>
+                  {console.log(project)}
+
+                  <p className="my-6 text-2xl font-semibold">{project[2]}</p>
+                  <div>
+                    <p className="my-3 text-gray-400">{project[3]}</p>
+                    <p className="my-3"> Deadline:  {
+                      // project[4] - bignumber
+                      // BigNumber.from(project[4]).toNumber() - unix timestamp
+                      // (BigNumber.from(project[4]).toNumber()) * 1000 - converted to milliseconds
+                      new Date((BigNumber.from(project[4]).toNumber()) * 1000).toLocaleDateString()
+                    } </p>
+
+                    <p className="my-3"> Total Pledged:  {
+                      BigNumber.from(project[5]).toNumber()
+                    } </p>
+
+                    <p className="my-3"> Goal:  {
+                      ethers.utils.formatEther(project[6])
+                    } ETH </p>
                   </div>
+
+                  {/* TODO: add project/[id] */}
+                  <button className='rounded-md my-5 bg-pink-500 text-white p-3 mx-1'>Details</button>
                 </div>
               </div>
             ))

@@ -18,17 +18,21 @@ const create = () => {
   const [project, setProject] = useState(initialState)
 
   async function uploadToIPFS() {
+    // destructure project state
     const { name, description, projectDeadline, goal } = project
+    // checks in place
     if (!name || !description || !projectDeadline || !goal) return
-    /* first, upload to IPFS */
+
+    // stringify JSON data
     const data = JSON.stringify({
       name: name, description: description, projectDeadline: projectDeadline, goal: goal
     });
 
     try {
+      // use client to add data
       const added = await client.add(data)
+      // return url
       const url = `https://ipfs.infura.io/ipfs/${added.path}`
-      /* after file is uploaded to IPFS, return the URL to use it in the transaction */
       return url
     } catch (error) {
       console.log('Error uploading file: ', error)
@@ -37,34 +41,38 @@ const create = () => {
 
   async function saveProject() {
     const { name, description, projectDeadline, goal } = project
+    // upload content to IPFS
     const url = await uploadToIPFS()
     const web3Modal = new Web3Modal()
+
+    // connect to web3 and get signer account
     const connection = await web3Modal.connect()
     const provider = new ethers.providers.Web3Provider(connection)
     const signer = provider.getSigner()
 
-    /* next, create the item */
-    let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-    let transaction = await contract.createNewProject(name, description, projectDeadline, goal, url)
-    await transaction.wait()
+    try {
+      // create project
+      let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+      let transaction = await contract.createNewProject(name, description, projectDeadline, goal, url)
 
-    router.push('/')
+      // await successful transaction and reroute to home
+      await transaction.wait()
+      router.push('/')
+    } catch (err) {
+      window.alert(err)
+      // console.log(err)
+    }
+
+
   }
 
   return (
     <div className="min-h-screen my-20 w-screen p-5">
-      <Head>
-        <title>New Fundraising Campaign</title>
-        <meta name="description" content="Create New Fundraising Campaign" />
-        <link rel="icon" href="/logo.png" />
-      </Head>
       <main>
-        <div className="flex-auto">
-          <div className="rounded-md my-10 bg-pink-500 text-white p-3 mx-4 w-40"><Link href="/"> Back to Home</Link></div>
-          <p className="text-center text-lg my-5">Create a new campaign!</p>
-        </div>
+        <div className="rounded-md my-10 bg-pink-500 text-white p-3 mx-4 w-40"><Link href="/"> Back to Home</Link></div>
+        <p className="text-center text-lg my-5">Create a new campaign!</p>
 
-        <div className="bg-pink-500 text-black h-50 p-10 flex flex-col align-middle">
+        <div className="bg-pink-500 text-black h-50 p-10 flex flex-col">
           <input
             onChange={e => setProject({ ...project, name: e.target.value })}
             name='title'
@@ -81,13 +89,13 @@ const create = () => {
           <input
             onChange={e => setProject({ ...project, projectDeadline: e.target.value })}
             name='projectDeadline'
-            placeholder='Give it a deadline ...'
+            placeholder='Give it a deadline ... (in days)'
             className='p-2 my-2 rounded-md'
           />
           <input
             onChange={e => setProject({ ...project, goal: e.target.value })}
             name='goalEth'
-            placeholder='Give it a goal ... (in ETH)'
+            placeholder='Give it a goal ... (in ETH). Only integer values are valid'
             className='p-2 my-2 rounded-md'
           />
           <button type='button' className="w-20 text-white rounded-md my-10 px-3 py-2 shadow-lg border-2" onClick={saveProject}>Submit</button>

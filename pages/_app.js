@@ -5,6 +5,7 @@ import { ethers } from 'ethers'
 import Web3Modal from 'web3modal'
 import WalletConnectProvider from '@walletconnect/web3-provider'
 import Link from 'next/link'
+import Head from 'next/head'
 
 function MyApp({ Component, pageProps }) {
   const [account, setAccount] = useState(null)
@@ -40,6 +41,11 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <div className='min-h-screen w-screen font-mono'>
+      <Head>
+        <title>HoardNut</title>
+        <meta name="description" content="Create New Fundraising Campaign" />
+        <link rel="icon" href="/logo.png" />
+      </Head>
       <div className='sm:h-10'>
         <nav className='flex mx-auto text-black-20/100'>
           <Link href="/">
