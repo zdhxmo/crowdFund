@@ -48,14 +48,16 @@ export default function project({ project, projectID }) {
       let transaction = await contract.contributeFunds(BigNumber.from(project.id).toNumber(), {
         value: ethers.utils.parseUnits(contributionValue, "ether")
       })
-      await transaction.wait()
+      let x = await transaction.wait()
 
-      const url = await updateIPFS()
+      /* TODO: id transaction failed, do not update state in front page */
+      if (x.status == 1) {
+        const url = await updateIPFS()
 
-      let projectUpdate = await contract.updateProject(project.id, url, contributionValue)
-      await projectUpdate.wait()
-      router.push('/')
-
+        let projectUpdate = await contract.updateProject(project.id, url, contributionValue)
+        await projectUpdate.wait()
+        router.push('/')
+      }
     } catch (err) {
       window.alert(err.message)
     }

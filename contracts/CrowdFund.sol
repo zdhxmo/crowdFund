@@ -42,13 +42,20 @@ contract CrowdFund {
         uint256 amount
     );
 
-    event GenerateRefund(uint256 indexed id, address refundRequestUser, uint256 refundAmt);
+    event GenerateRefund(
+        uint256 indexed id,
+        address refundRequestUser,
+        uint256 refundAmt
+    );
 
     event ApproveRequest(uint256 indexed _id, uint32 _withdrawalRequestIndex);
 
     event RejectRequest(uint256 indexed _id, uint32 _withdrawalRequestIndex);
 
-    event TransferRequestFunds(uint256 indexed _id, uint32 _withdrawalRequestIndex);
+    event TransferRequestFunds(
+        uint256 indexed _id,
+        uint32 _withdrawalRequestIndex
+    );
 
     /*===== State variables =====*/
     address payable platformAdmin;
@@ -116,7 +123,6 @@ contract CrowdFund {
     // project ID => withdrawal request Index
     mapping(uint256 => uint32) latestWithdrawalIndex;
 
-
     /*===== Modifiers =====*/
     modifier checkState(uint256 _id, State _state) {
         require(
@@ -127,22 +133,37 @@ contract CrowdFund {
     }
 
     modifier onlyAdmin() {
-        require(msg.sender == platformAdmin, "Unauthorized access. Only admin can use this function");
+        require(
+            msg.sender == platformAdmin,
+            "Unauthorized access. Only admin can use this function"
+        );
         _;
     }
 
     modifier onlyProjectOwner(uint256 _id) {
-        require(msg.sender == idToProject[_id].creator, "Unauthorized access. Only project owner can use this function");
+        require(
+            msg.sender == idToProject[_id].creator,
+            "Unauthorized access. Only project owner can use this function"
+        );
         _;
     }
 
     modifier onlyProjectDonor(uint256 _id) {
-        require(contributions[_id][msg.sender] > 0, "Unauthorized access. Only project funders can use this function." );
+        require(
+            contributions[_id][msg.sender] > 0,
+            "Unauthorized access. Only project funders can use this function."
+        );
         _;
     }
 
-    modifier checkLatestWithdrawalIndex(uint256 _id, uint32 _withdrawalRequestIndex) {
-        require(latestWithdrawalIndex[_id] == _withdrawalRequestIndex, "This is not the latest withdrawal request. Please check again and try later");
+    modifier checkLatestWithdrawalIndex(
+        uint256 _id,
+        uint32 _withdrawalRequestIndex
+    ) {
+        require(
+            latestWithdrawalIndex[_id] == _withdrawalRequestIndex,
+            "This is not the latest withdrawal request. Please check again and try later"
+        );
         _;
     }
 
@@ -155,7 +176,6 @@ contract CrowdFund {
     fallback() external payable {}
 
     receive() external payable {}
-
 
     /*===== Functions  =====*/
 
@@ -221,7 +241,10 @@ contract CrowdFund {
     {
         require(_id <= projectCount, "Project ID out of range");
 
-        require(msg.value > 0, "Invalid transaction. Please send valid amounts to the project");
+        require(
+            msg.value > 0,
+            "Invalid transaction. Please send valid amounts to the project"
+        );
 
         require(
             block.timestamp <= idToProject[_id].projectDeadline,
@@ -266,7 +289,12 @@ contract CrowdFund {
     /** @dev Function to get refund on expired projects
      * @param _id Project ID
      */
-    function getRefund(uint256 _id) public payable onlyProjectDonor(_id) checkState(_id, State.Expire) {
+    function getRefund(uint256 _id)
+        public
+        payable
+        onlyProjectDonor(_id)
+        checkState(_id, State.Expire)
+    {
         require(
             block.timestamp > idToProject[_id].projectDeadline,
             "Project deadline hasn't been reached yet"
@@ -285,14 +313,14 @@ contract CrowdFund {
             idToProject[_id].totalPledged -= refundAmt;
             idToProject[_id].netDiff += refundAmt;
         }
-        
+
         emit GenerateRefund(_id, msg.sender, refundAmt);
     }
 
     /** @dev Function to create a request for withdrawal of funds
     * @param _id Project ID
     * @param _requestNumber Index of the request
-    * @param _description  Purpose of withdrawal
+    * @param _description  Purpose of wilatestWithdrawalIndex
     * @param _amount Amount of withdrawal requested in Wei
     */
     function createWithdrawalRequest(
@@ -329,65 +357,96 @@ contract CrowdFund {
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
     */
-    function approveWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
+    function approveWithdrawalRequest(
+        uint256 _id,
+        uint32 _withdrawalRequestIndex
+    )
+        public
+        onlyProjectDonor(_id)
+        checkState(_id, State.Success)
+        checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
+    {
         idToWithdrawalRequests[_id].approvedVotes += 1;
         emit ApproveRequest(_id, _withdrawalRequestIndex);
     }
 
     /** @dev Function to reject withdrawal of funds
-    * @param _id Project ID
-    * @param _withdrawalRequestIndex Index of withdrawal request
-    */
-    function rejectWithdrawalRequest(uint256 _id, uint32 _withdrawalRequestIndex) public onlyProjectDonor(_id) checkState(_id, State.Success) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex){
+     * @param _id Project ID
+     * @param _withdrawalRequestIndex Index of withdrawal request
+     */
+    function rejectWithdrawalRequest(
+        uint256 _id,
+        uint32 _withdrawalRequestIndex
+    )
+        public
+        onlyProjectDonor(_id)
+        checkState(_id, State.Success)
+        checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
+    {
         idToWithdrawalRequests[_id].approvedVotes -= 1;
         emit RejectRequest(_id, _withdrawalRequestIndex);
-
     }
 
     /** @dev Function to transfer funds to project creator
-    * @param _id Project ID
-    * @param _withdrawalRequestIndex Index of withdrawal request
-    */
-    function transferWithdrawalRequestFunds(uint256 _id, uint32 _withdrawalRequestIndex) public payable onlyProjectOwner(_id) checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex) {
-
+     * @param _id Project ID
+     * @param _withdrawalRequestIndex Index of withdrawal request
+     */
+    function transferWithdrawalRequestFunds(
+        uint256 _id,
+        uint32 _withdrawalRequestIndex
+    )
+        public
+        payable
+        onlyProjectOwner(_id)
+        checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
+    {
         // require quorum
-        require(idToWithdrawalRequests[_id].approvedVotes > (idToProject[_id].totalDepositors).div(2), "More than half the total depositors need to approve withdrawal request" );
+        require(
+            idToWithdrawalRequests[_id].approvedVotes >
+                (idToProject[_id].totalDepositors).div(2),
+            "More than half the total depositors need to approve withdrawal request"
+        );
 
         // platform fee - $1 for every $100 withdrawn
-        uint256 platformFee = idToWithdrawalRequests[_id].withdrawalAmount / 100;
+        uint256 platformFee = idToWithdrawalRequests[_id].withdrawalAmount /
+            100;
         platformAdmin.transfer(platformFee);
 
         // transfer remaining funds to project creator
-        payable(idToProject[_id].creator).transfer(idToWithdrawalRequests[_id].withdrawalAmount - platformFee);
+        payable(idToProject[_id].creator).transfer(
+            idToWithdrawalRequests[_id].withdrawalAmount - platformFee
+        );
 
         // approved votes set to 0 for the next request cycle
         idToWithdrawalRequests[_id].approvedVotes = 0;
 
-        idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id].withdrawalAmount;
+        idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id]
+            .withdrawalAmount;
 
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
-
     }
 
     /** @dev Function to update project IPFS hash on payment deposit
-    * @param _id Project ID
-    * @param _url new IPFS hash
-    * @param _newPledged Amount pledged by contributor
-    * TODO: find a way to make this functionality internal. This CANNOT be a public function
-    */
-    function updateProject(uint256 _id, string memory _url, uint256 _newPledged) public {
+     * @param _id Project ID
+     * @param _url new IPFS hash
+     * @param _newPledged Amount pledged by contributor
+     * TODO: find a way to make this functionality internal. This CANNOT be a public function
+     */
+    function updateProject(
+        uint256 _id,
+        string memory _url,
+        uint256 _newPledged
+    ) public {
         idToProject[_id].ipfsURL = _url;
         idToProject[_id].totalPledged += _newPledged;
         idToProject[_id].netDiff -= _newPledged;
     }
 
-    
-
     /*===== Blockchain get functions =====*/
 
     /** @dev Function to get project details
-    * @param _id Project ID
-    */
+     * @param _id Project ID
+     */
     function getProjectDetails(uint256 _id)
         public
         view
@@ -418,7 +477,7 @@ contract CrowdFund {
         uint256 _projectCount = projectCount;
 
         Project[] memory projects = new Project[](_projectCount);
-        for(uint i = 0; i < _projectCount; i++) {
+        for (uint256 i = 0; i < _projectCount; i++) {
             uint256 currentId = i + 1;
             Project storage currentItem = idToProject[currentId];
             projects[i] = currentItem;
@@ -426,11 +485,36 @@ contract CrowdFund {
         return projects;
     }
 
-    function getProjectURL(uint256 _id) public view returns(string memory url) {
+    function getProjectURL(uint256 _id)
+        public
+        view
+        returns (string memory url)
+    {
         url = idToProject[_id].ipfsURL;
     }
 
-    function getProjectCount() public view returns(uint256 count) {
+    function getProjectCount() public view returns (uint256 count) {
         count = projectCount;
+    }
+
+    function getAllWithdrawalRequests(uint256 _id)
+        public
+        view
+        returns (WithdrawalRequest[] memory)
+    {
+        uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
+
+        WithdrawalRequest[] memory withdrawals = new WithdrawalRequest[](
+            _lastWithdrawal
+        );
+        for (uint256 i = 0; i < _lastWithdrawal; i++) {
+            uint256 currentId = i + 1;
+            WithdrawalRequest storage currentRequest = idToWithdrawalRequests[
+                currentId
+            ];
+            withdrawals[i] = currentRequest;
+        }
+
+        return withdrawals;
     }
 }

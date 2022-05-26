@@ -4,12 +4,28 @@ import {
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
 const ipfsURI = 'https://ipfs.io/ipfs/'
-import { useState } from 'react' // new
+import { useState } from 'react'
+import Web3Modal from 'web3modal'
 
 const initialState = { id: 0, requestNo: '', description: '', amount: 0 };
 
 export default function withdrawal({ project, projectID }) {
     const [withdrawalRequest, setWithdrawalRequest] = useState(initialState)
+
+    async function requestWithdrawal() {
+        const web3Modal = new Web3Modal()
+        const connection = await web3Modal.connect()
+        const provider = new ethers.providers.Web3Provider(connection)
+        const signer = provider.getSigner()
+
+        try {
+            let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            let transaction = await contract.createWithdrawalRequest(BigNumber.from(project.id).toNumber(), withdrawalRequest.requestNo, withdrawalRequest.description, withdrawalRequest.amount)
+            await transaction.wait()
+        } catch (err) {
+            window.alert(err.message)
+        }
+    }
 
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
@@ -33,7 +49,7 @@ export default function withdrawal({ project, projectID }) {
                     placeholder='Withdrawal amount ... (in ETH). Only integer values are valid'
                     className='p-2 mt-5 rounded-md'
                 />
-                <button type='button' className="w-20 bg-white rounded-md my-10 px-3 py-2 shadow-lg border-2">Submit</button>
+                <button type='button' className="w-20 bg-white rounded-md my-10 px-3 py-2 shadow-lg border-2" onClick={requestWithdrawal}>Submit</button>
             </div>
         </div >
     )
