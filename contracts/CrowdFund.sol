@@ -162,13 +162,13 @@ contract CrowdFund {
     /** @dev Function to start a new project.
      * @param _name Name of the project
      * @param _description Project Description
-     * @param _projectDeadlineDays Total days to end of fundraise
+     * @param _projectDeadline Total days to end of fundraise
      * @param _goalEth Project goal in ETH
      */
     function createNewProject(
         string memory _name,
         string memory _description,
-        uint256 _projectDeadlineDays,
+        uint256 _projectDeadline,
         uint256 _goalEth,
         string memory _ipfsURL
     ) public {
@@ -176,7 +176,7 @@ contract CrowdFund {
         projectCount = projectCount.add(1);
 
         // calculate total seconds to project deadline
-        uint256 _projectDeadline = _projectDeadlineDays * 86400;
+        // uint256 _projectDeadline = _projectDeadlineDays * 86400;
 
         // log goal as wei
         uint256 _goal = _goalEth * 1e18;
@@ -187,7 +187,7 @@ contract CrowdFund {
             creator: msg.sender,
             name: _name,
             description: _description,
-            projectDeadline: _projectDeadline + block.timestamp,
+            projectDeadline: _projectDeadline,
             totalPledged: 0,
             goal: _goal,
             netDiff: _goal,

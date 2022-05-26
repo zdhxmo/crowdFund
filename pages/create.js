@@ -9,10 +9,10 @@ import { ethers } from 'ethers'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 import CrowdFund from "../build/contracts/CrowdFund.json"
 import {
-  contractAddress, platformAdmin
+  contractAddress
 } from '../config'
 
-const initialState = { name: '', description: '', projectDeadline: '', goal: '' };
+const initialState = { name: '', description: '', projectDeadline: '', goal: '', totalPledged: 0 };
 const create = () => {
   const router = useRouter()
   const [project, setProject] = useState(initialState)
@@ -25,14 +25,14 @@ const create = () => {
 
     // stringify JSON data
     const data = JSON.stringify({
-      name: name, description: description, projectDeadline: projectDeadline, goal: goal
+      name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0
     });
 
     try {
       // use client to add data
       const added = await client.add(data)
       // return url
-      const url = `https://ipfs.infura.io/ipfs/${added.path}`
+      const url = `${added.path}`
       return url
     } catch (error) {
       console.log('Error uploading file: ', error)
@@ -60,7 +60,6 @@ const create = () => {
       router.push('/')
     } catch (err) {
       window.alert(err)
-      // console.log(err)
     }
 
 
@@ -87,7 +86,7 @@ const create = () => {
             className='p-2 my-2 rounded-md'
           />
           <input
-            onChange={e => setProject({ ...project, projectDeadline: e.target.value })}
+            onChange={e => setProject({ ...project, projectDeadline: Math.floor(new Date() / 1000) + (e.target.value * 86400) })}
             name='projectDeadline'
             placeholder='Give it a deadline ... (in days)'
             className='p-2 my-2 rounded-md'

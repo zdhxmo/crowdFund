@@ -54,7 +54,7 @@ function MyApp({ Component, pageProps }) {
             </a>
           </Link>
 
-          <div className='rounded-md my-10 p-3 mx-4 bg-pink-500 text-white'>
+          {/* <div className='rounded-md my-10 p-3 mx-4 bg-pink-500 text-white'>
             {
               !account && (
                 <div>
@@ -65,7 +65,7 @@ function MyApp({ Component, pageProps }) {
             {
               account && <p>{account.length > 10 ? account.substr(0, 9) + "..." : account}</p>
             }
-          </div>
+          </div> */}
 
 
           <div>

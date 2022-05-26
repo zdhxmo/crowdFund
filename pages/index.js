@@ -19,13 +19,11 @@ export default function Home({ projects }) {
         </div>
       </div>
       <div className='text-black'>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
           {
             projects.map((project, i) => (
               <div key={i} className="border shadow rounded-xl overflow-hidden">
                 <div className="p-4">
-                  {console.log(project)}
-
                   <p className="my-6 text-2xl font-semibold">{project[2]}</p>
                   <div>
                     <p className="my-3 text-gray-400">{project[3]}</p>
@@ -45,8 +43,9 @@ export default function Home({ projects }) {
                     } ETH </p>
                   </div>
 
-                  {/* TODO: add project/[id] */}
-                  <button className='rounded-md my-5 bg-pink-500 text-white p-3 mx-1'>Details</button>
+                  <Link href={`project/${project[11]}`} key={i}>
+                    <button className='rounded-md my-5 bg-pink-500 text-white p-3 mx-1'>Details</button>
+                  </Link>
                 </div>
               </div>
             ))
