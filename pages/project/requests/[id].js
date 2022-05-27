@@ -35,24 +35,31 @@ export default function requests({ project, projectID }) {
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
                     {
-                        withdrawalRequests.map((request) =>
-                            <div className='border shadow rounded-xl overflow-hidden' key={request[0]}>
-                                <div className='p-4'>
-                                    <p className='py-4'>id: {request[0]}</p>
-                                    <p className='py-4'>description: {request[1]}</p>
-                                    <p className='py-4'>amount: {BigNumber.from(request[2]).toNumber()}</p>
-                                    <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
-                                    <div className='flex-auto '>
-                                        <button className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
-                                        <button className="bg-white text-black rounded-md my-10 px-3 mx-5 py-2 shadow-lg border-2">Reject</button>
+                        withdrawalRequests.map(async (request) => {
+                            const ipfs = `${ipfsURI}/${request[6]}`
+                            const response = await fetch(ipfs)
+                            const data = await response.json()
+                            {
+                                <div className='border shadow rounded-xl overflow-hidden' key={data[0]} >
+                                    <div className='p-4'>
+                                        <p className='py-4'>id: {data[0]}</p>
+                                        <p className='py-4'>description: {data[1]}</p>
+                                        <p className='py-4'>amount: {BigNumber.from(data[2]).toNumber()}</p>
+                                        <p className='py-4'>total approvals: {BigNumber.from(data[4]).toNumber()}</p>
+                                        <div className='flex-auto '>
+                                            <button className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
+                                            <button className="bg-white text-black rounded-md my-10 px-3 mx-5 py-2 shadow-lg border-2">Reject</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            }
+                        }
+
                         )
                     }
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 

@@ -3,7 +3,11 @@ import {
     contractAddress
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
+
+import { create as ipfsHttpClient } from 'ipfs-http-client'
+const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 const ipfsURI = 'https://ipfs.io/ipfs/'
+
 import { useState } from 'react'
 import Web3Modal from 'web3modal'
 import { useRouter } from 'next/router'
@@ -15,15 +19,42 @@ export default function withdrawal({ project, projectID }) {
 
     const [withdrawalRequest, setWithdrawalRequest] = useState(initialState)
 
+    async function uploadToIPFS() {
+        // destructure project state
+        const { requestNo, description, amount } = withdrawalRequest
+        // checks in place
+        if (!requestNo || !description || !amount) return
+
+
+        // stringify JSON data
+        const data = JSON.stringify({
+            id: project.id, requestNo: requestNo, description: description, amount: amount
+        });
+
+        try {
+            // use client to add data
+            const added = await client.add(data)
+            // return url
+            const url = `${added.path}`
+            return url
+        } catch (error) {
+            console.log('Error uploading file: ', error)
+        }
+    }
+
     async function requestWithdrawal() {
+        const { requestNo, description, amount } = withdrawalRequest
+
         const web3Modal = new Web3Modal()
         const connection = await web3Modal.connect()
         const provider = new ethers.providers.Web3Provider(connection)
         const signer = provider.getSigner()
 
+        const url = await uploadToIPFS()
+
         try {
             let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-            let transaction = await contract.createWithdrawalRequest(BigNumber.from(project.id).toNumber(), withdrawalRequest.requestNo, withdrawalRequest.description, withdrawalRequest.amount)
+            let transaction = await contract.createWithdrawalRequest(BigNumber.from(project.id).toNumber(), requestNo, description, amount, url)
             const x = await transaction.wait()
 
             if (x.status == 1) {

@@ -110,6 +110,8 @@ contract CrowdFund {
         uint256 approvedVotes;
         // current state of the withdrawal request
         Withdrawal currentWithdrawalState;
+        // hash of the ipfs storage
+        string ipfsHash;
     }
 
     // project states
@@ -327,7 +329,8 @@ contract CrowdFund {
         uint256 _id,
         uint32 _requestNumber,
         string memory _description,
-        uint256 _amount
+        uint256 _amount,
+        string memory _url
     ) public onlyProjectOwner(_id) checkState(_id, State.Success){
         require(idToProject[_id].totalWithdrawn < idToProject[_id].totalPledged, "Insufficient funds");
 
@@ -341,7 +344,8 @@ contract CrowdFund {
             // initialized with no votes for request
             approvedVotes: 0,
             // state changes on quorum
-            currentWithdrawalState: Withdrawal.Reject
+            currentWithdrawalState: Withdrawal.Reject,
+            ipfsHash: _url
         });
 
         // update project to request mapping
@@ -509,9 +513,7 @@ contract CrowdFund {
         );
         for (uint256 i = 0; i < _lastWithdrawal; i++) {
             uint256 currentId = i + 1;
-            WithdrawalRequest storage currentRequest = idToWithdrawalRequests[
-                currentId
-            ];
+            WithdrawalRequest storage currentRequest = idToWithdrawalRequests[currentId];
             withdrawals[i] = currentRequest;
         }
 

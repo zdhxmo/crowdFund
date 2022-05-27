@@ -1,5 +1,4 @@
 import Link from "next/link"
-import Head from 'next/head'
 import { useState } from 'react' // new
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 import { useRouter } from 'next/router'
@@ -67,7 +66,6 @@ const create = () => {
     const web3Modal = new Web3Modal()
     const connection = await web3Modal.connect()
     const provider = new ethers.providers.Web3Provider(connection)
-    console.log(provider)
 
     const signer = provider.getSigner()
     const address = await signer.getAddress()
