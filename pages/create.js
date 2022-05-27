@@ -12,7 +12,7 @@ import {
   contractAddress
 } from '../config'
 
-const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: '', totalPledged: 0 };
+const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: '', totalPledged: 0, creator: '' };
 
 const create = () => {
   const router = useRouter()
@@ -35,7 +35,7 @@ const create = () => {
     }
   }
 
-  async function uploadToIPFS() {
+  async function uploadToIPFS(address) {
     // destructure project state
     const { name, description, projectDeadline, goal } = project
     // checks in place
@@ -44,7 +44,7 @@ const create = () => {
 
     // stringify JSON data
     const data = JSON.stringify({
-      id: countParsed, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0
+      id: countParsed, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0, creator: address
     });
 
     try {
@@ -63,14 +63,17 @@ const create = () => {
 
     await getProjectCount();
 
-    // upload content to IPFS
-    const url = await uploadToIPFS()
-
     // connect to web3 and get signer account
     const web3Modal = new Web3Modal()
     const connection = await web3Modal.connect()
     const provider = new ethers.providers.Web3Provider(connection)
+    console.log(provider)
+
     const signer = provider.getSigner()
+    const address = await signer.getAddress()
+
+    // upload content to IPFS
+    const url = await uploadToIPFS(address)
 
     try {
       // create project
@@ -78,13 +81,14 @@ const create = () => {
       let transaction = await contract.createNewProject(name, description, projectDeadline, goal, url)
 
       // await successful transaction and reroute to home
-      await transaction.wait()
-      router.push('/')
+      const x = await transaction.wait()
+
+      if (x.status == 1) {
+        router.push('/')
+      }
     } catch (err) {
       window.alert(err)
     }
-
-
   }
 
   return (

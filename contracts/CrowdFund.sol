@@ -320,7 +320,7 @@ contract CrowdFund {
     /** @dev Function to create a request for withdrawal of funds
     * @param _id Project ID
     * @param _requestNumber Index of the request
-    * @param _description  Purpose of wilatestWithdrawalIndex
+    * @param _description  Purpose of withdrawal
     * @param _amount Amount of withdrawal requested in Wei
     */
     function createWithdrawalRequest(

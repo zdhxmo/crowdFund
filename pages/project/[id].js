@@ -55,8 +55,8 @@ export default function project({ project, projectID }) {
         const url = await updateIPFS()
 
         let projectUpdate = await contract.updateProject(project.id, url, contributionValue)
-        await projectUpdate.wait()
-        router.push('/')
+        let y = await projectUpdate.wait()
+        if (y.status == 1) router.push('/')
       }
     } catch (err) {
       window.alert(err.message)
@@ -66,8 +66,8 @@ export default function project({ project, projectID }) {
   return (
     <div className='grid mt-20 grid-cols-1'>
       <div className='bg-pink-500 text-white p-20 text-center rounded-md mx-20 mt-20'>
-        {/* <p className='my-6'><span className='font-bold'> Project Number: </span> {BigNumber.from(project.id).toNumber()}</p> */}
         <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>
+        <p className='my-6'><span className='font-bold'> Creator: </span> {project.creator}</p>
         <p className='my-6'><span className='font-bold'> Project Name: </span> {project.name}</p>
         <p className='my-6'><span className='font-bold'>Description:</span> {project.description}</p>
         <p className='my-6'><span className='font-bold'>Crowdfund deadline:</span> {new Date((BigNumber.from(project.projectDeadline).toNumber()) * 1000).toLocaleDateString()}</p>
@@ -89,7 +89,9 @@ export default function project({ project, projectID }) {
           <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Create Withdrawal Request</button>
         </Link>
 
-        <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject request</button>
+        <Link href={`requests/${projectID}`}>
+          <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject Request</button>
+        </Link>
 
         <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
 

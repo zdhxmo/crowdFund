@@ -6,10 +6,13 @@ import CrowdFund from "../../../build/contracts/CrowdFund.json"
 const ipfsURI = 'https://ipfs.io/ipfs/'
 import { useState } from 'react'
 import Web3Modal from 'web3modal'
+import { useRouter } from 'next/router'
 
 const initialState = { id: 0, requestNo: '', description: '', amount: 0 };
 
 export default function withdrawal({ project, projectID }) {
+    const router = useRouter()
+
     const [withdrawalRequest, setWithdrawalRequest] = useState(initialState)
 
     async function requestWithdrawal() {
@@ -21,7 +24,11 @@ export default function withdrawal({ project, projectID }) {
         try {
             let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
             let transaction = await contract.createWithdrawalRequest(BigNumber.from(project.id).toNumber(), withdrawalRequest.requestNo, withdrawalRequest.description, withdrawalRequest.amount)
-            await transaction.wait()
+            const x = await transaction.wait()
+
+            if (x.status == 1) {
+                router.push(`/project/${projectID}`)
+            }
         } catch (err) {
             window.alert(err.message)
         }
@@ -29,6 +36,7 @@ export default function withdrawal({ project, projectID }) {
 
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
+            <p className='text-center'>Only project creator can access this functionality on goal reached</p>
             <div className='bg-pink-500 text-black p-20 text-center rounded-md mx-5 flex flex-col'>
                 <input
                     type='number'
