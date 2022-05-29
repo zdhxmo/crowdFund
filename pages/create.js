@@ -51,6 +51,7 @@ const create = () => {
       const added = await client.add(data)
       // return url
       const url = `${added.path}`
+      console.log(url);
       return url
     } catch (error) {
       console.log('Error uploading file: ', error)

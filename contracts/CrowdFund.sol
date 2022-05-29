@@ -41,8 +41,7 @@ contract CrowdFund {
         uint256 indexed id,
         address contributor,
         uint256 amount,
-        uint256 totalPledged,
-        uint256 netDifference
+        uint256 totalPledged
     );
 
     event NewWithdrawalRequest(
@@ -95,8 +94,6 @@ contract CrowdFund {
         uint256 totalPledged;
         // total amount needed for a successful campaign
         uint256 goal;
-        // how far from the goal
-        uint256 netDiff;
         // number of depositors
         uint256 totalDepositors;
         // total funds withdrawn from project
@@ -206,9 +203,6 @@ contract CrowdFund {
         // update ID
         projectCount += 1;
 
-        // calculate total seconds to project deadline
-        // uint256 _projectDeadline = _projectDeadlineDays * 86400;
-
         // log goal as wei
         uint256 _goal = _goalEth * 1e18;
 
@@ -221,7 +215,6 @@ contract CrowdFund {
             projectDeadline: _projectDeadline,
             totalPledged: 0,
             goal: _goal,
-            netDiff: _goal,
             currentState: State.Fundraise,
             totalDepositors: 0,
             totalWithdrawn: 0,
@@ -268,9 +261,6 @@ contract CrowdFund {
         // increase total contributions pledged to the project
         idToProject[_id].totalPledged += msg.value;
 
-        // reduce money left from the goal
-        idToProject[_id].netDiff -= msg.value;
-
         // add one to total number of depositors for this project
         idToProject[_id].totalDepositors += 1;
 
@@ -278,8 +268,7 @@ contract CrowdFund {
             _id,
             msg.sender,
             msg.value,
-            idToProject[_id].totalPledged,
-            idToProject[_id].netDiff
+            idToProject[_id].totalPledged
         );
     }
 
@@ -304,7 +293,7 @@ contract CrowdFund {
             );
         }
     
-    /** @dev Function to end fundraising drive with success
+    /** @dev Function to end fundraising drive with success is total pledged higher than goal. Irrespective of deadline
     * @param _id Project ID
     */
     function endContributionsSuccess(uint256 _id) 
@@ -312,11 +301,6 @@ contract CrowdFund {
         onlyProjectOwner(_id)
         checkState(_id, State.Fundraise) 
         {
-            require(
-                block.timestamp > idToProject[_id].projectDeadline,
-                "Contributions cannot be made to this project anymore."
-            );
-
             require(idToProject[_id].totalPledged >= idToProject[_id].goal, "Did not receive enough funds");
 
             idToProject[_id].currentState = State.Success;
@@ -342,9 +326,6 @@ contract CrowdFund {
             "Project deadline hasn't been reached yet"
         );
 
-        // change project state
-        // endFundraise(_id);
-
         uint256 refundAmt = contributions[_id][msg.sender];
 
         // if money is transfered
@@ -353,7 +334,6 @@ contract CrowdFund {
             contributions[_id][msg.sender] = 0;
             // reduce total amount pledged to the project
             idToProject[_id].totalPledged -= refundAmt;
-            idToProject[_id].netDiff += refundAmt;
         }
 
         emit GenerateRefund(_id, msg.sender, refundAmt);
@@ -483,7 +463,6 @@ contract CrowdFund {
     ) public {
         idToProject[_id].ipfsURL = _url;
         idToProject[_id].totalPledged += _newPledged;
-        idToProject[_id].netDiff -= _newPledged;
     }
 
     /** @dev Function to update project IPFS hash on state change
@@ -516,7 +495,6 @@ contract CrowdFund {
             uint256 projectDeadline,
             uint256 totalPledged,
             uint256 goal,
-            uint256 netDiff,
             State currentState,
             string memory url
         )
@@ -527,7 +505,6 @@ contract CrowdFund {
         projectDeadline = idToProject[_id].projectDeadline;
         totalPledged = idToProject[_id].totalPledged;
         goal = idToProject[_id].goal;
-        netDiff = idToProject[_id].netDiff;
         currentState = idToProject[_id].currentState;
         url = idToProject[_id].ipfsURL;
     }

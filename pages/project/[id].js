@@ -98,7 +98,10 @@ export default function project({ project, projectID }) {
         const url = await updateIPFSOnStateChange(newState);
         let projectUpdate = await contract.updateProjectOnStateChange(project.id, url, newState);
         let y = await projectUpdate.wait()
-        if (y.status == 1) router.push('/')
+        if (y.status == 1) {
+          window.alert('Project state was successfully changed to : Success')
+          router.push('/')
+        }
       }
     } catch (err) {
       window.alert(err.message)
@@ -121,7 +124,10 @@ export default function project({ project, projectID }) {
         const url = await updateIPFSOnStateChange(newState);
         let projectUpdate = await contract.updateProjectOnStateChange(project.id, url, newState);
         let y = await projectUpdate.wait()
-        if (y.status == 1) router.push('/')
+        if (y.status == 1) {
+          window.alert('Project state was successfully changed to : Expire')
+          router.push('/')
+        }
       }
     } catch (err) {
       window.alert(err.message)
@@ -176,7 +182,7 @@ export async function getStaticPaths() {
   const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
   const data = await contract.getAllProjects()
 
-  const paths = data.map(d => ({ params: { id: d[11] } }))
+  const paths = data.map(d => ({ params: { id: d[10] } }))
 
   return {
     paths,

@@ -8,7 +8,7 @@ import Link from 'next/link'
 export default function Home({ projects }) {
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
-      <p className='text-center'>this is a test project. Please don't play with non-disposable money </p>
+      <p className='text-center'>test project</p>
 
       <div className='bg-pink-500 text-white p-10 rounded-md'>
         <div>
@@ -51,7 +51,7 @@ export default function Home({ projects }) {
                     } ETH </p>
                   </div>
 
-                  <Link href={`project/${project[11]}`} key={i}>
+                  <Link href={`project/${project[10]}`} key={i}>
                     <button className='rounded-md my-5 bg-pink-500 text-white p-3 mx-1'>Details</button>
                   </Link>
                 </div>

@@ -100,7 +100,7 @@ export async function getStaticPaths() {
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
 
-    const paths = data.map(d => ({ params: { id: d[11] } }))
+    const paths = data.map(d => ({ params: { id: d[10] } }))
 
     return {
         paths,

@@ -1,4 +1,4 @@
-import { BigNumber, ethers, web3 } from 'ethers'
+import { ethers } from 'ethers'
 import {
     contractAddress
 } from '../../../config'
@@ -34,11 +34,13 @@ export default function requests({ project, projectID }) {
                 <p>Withdrawal requests</p>
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
-                    {
-                        withdrawalRequests.map(async (request) => {
+                    {/* {
+                         withdrawalRequests.map(async (request) => {
                             const ipfs = `${ipfsURI}/${request[6]}`
                             const response = await fetch(ipfs)
                             const data = await response.json()
+                            console.log(data)
+
                             {
                                 <div className='border shadow rounded-xl overflow-hidden' key={data[0]} >
                                     <div className='p-4'>
@@ -56,7 +58,7 @@ export default function requests({ project, projectID }) {
                         }
 
                         )
-                    }
+                    } */}
                 </div>
             </div>
         </div >
@@ -69,7 +71,7 @@ export async function getStaticPaths() {
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
 
-    const paths = data.map(d => ({ params: { id: d[11] } }))
+    const paths = data.map(d => ({ params: { id: d[10] } }))
 
     return {
         paths,
