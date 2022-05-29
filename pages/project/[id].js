@@ -100,7 +100,6 @@ export default function project({ project, projectID }) {
         let y = await projectUpdate.wait()
         if (y.status == 1) {
           window.alert('Project state was successfully changed to : Success')
-          router.push('/')
         }
       }
     } catch (err) {
@@ -160,7 +159,7 @@ export default function project({ project, projectID }) {
         </div>
       </div>
 
-      <div className='grid grid-cols-3 px-10'>
+      <div className='grid grid-cols-1 px-10'>
         <Link href={`withdrawal/${projectID}`}>
           <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Create Withdrawal Request</button>
         </Link>

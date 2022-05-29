@@ -1,4 +1,4 @@
-import { ethers } from 'ethers'
+import { ethers, BigNumber } from 'ethers'
 import {
     contractAddress
 } from '../../../config'
@@ -24,6 +24,7 @@ export default function requests({ project, projectID }) {
             window.alert(err.message)
         }
     }
+
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
             <p className='text-center'>Only project contributors can access this functionality</p>
@@ -34,31 +35,23 @@ export default function requests({ project, projectID }) {
                 <p>Withdrawal requests</p>
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
-                    {/* {
-                         withdrawalRequests.map(async (request) => {
-                            const ipfs = `${ipfsURI}/${request[6]}`
-                            const response = await fetch(ipfs)
-                            const data = await response.json()
-                            console.log(data)
+                    {
+                        withdrawalRequests.map(request =>
+                            <div className='border shadow rounded-xl overflow-hidden' key={request[0]}>
+                                <div className='p-4'>
+                                    <p className='py-4'>id: {request[0]}</p>
+                                    <p className='py-4'>description: {request[1]}</p>
+                                    <p className='py-4'>amount: {BigNumber.from(request[2]).toNumber()}</p>
+                                    <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
 
-                            {
-                                <div className='border shadow rounded-xl overflow-hidden' key={data[0]} >
-                                    <div className='p-4'>
-                                        <p className='py-4'>id: {data[0]}</p>
-                                        <p className='py-4'>description: {data[1]}</p>
-                                        <p className='py-4'>amount: {BigNumber.from(data[2]).toNumber()}</p>
-                                        <p className='py-4'>total approvals: {BigNumber.from(data[4]).toNumber()}</p>
-                                        <div className='flex-auto '>
-                                            <button className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
-                                            <button className="bg-white text-black rounded-md my-10 px-3 mx-5 py-2 shadow-lg border-2">Reject</button>
-                                        </div>
+                                    <div className='flex-auto '>
+                                        <button className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
+                                        <button className="bg-white text-black rounded-md my-10 px-3 mx-5 py-2 shadow-lg border-2">Reject</button>
                                     </div>
                                 </div>
-                            }
-                        }
-
+                            </div>
                         )
-                    } */}
+                    }
                 </div>
             </div>
         </div >

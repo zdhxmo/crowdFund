@@ -12,23 +12,33 @@ import { useState } from 'react'
 import Web3Modal from 'web3modal'
 import { useRouter } from 'next/router'
 
-const initialState = { id: 0, requestNo: '', description: '', amount: 0 };
+const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: 0, totalPledged: 0, creator: '', currentState: 0, requestNo: '', requestDescription: '', amount: 0 };
 
 export default function withdrawal({ project, projectID }) {
     const router = useRouter()
 
     const [withdrawalRequest, setWithdrawalRequest] = useState(initialState)
 
-    async function uploadToIPFS() {
+    async function uploadToIPFS(address) {
         // destructure project state
-        const { requestNo, description, amount } = withdrawalRequest
+        const { requestNo, requestDescription, amount } = withdrawalRequest
         // checks in place
-        if (!requestNo || !description || !amount) return
+        if (!requestNo || !requestDescription || !amount) return
 
 
         // stringify JSON data
         const data = JSON.stringify({
-            id: project.id, requestNo: requestNo, description: description, amount: amount
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            projectDeadline: project.projectDeadline,
+            goal: project.goal,
+            totalPledged: project.totalPledged,
+            creator: address,
+            currentState: project.currentState,
+            requestNo: requestNo,
+            requestDescription: requestDescription,
+            amount: amount
         });
 
         try {
@@ -43,18 +53,19 @@ export default function withdrawal({ project, projectID }) {
     }
 
     async function requestWithdrawal() {
-        const { requestNo, description, amount } = withdrawalRequest
+        const { requestNo, requestDescription, amount } = withdrawalRequest
 
         const web3Modal = new Web3Modal()
         const connection = await web3Modal.connect()
         const provider = new ethers.providers.Web3Provider(connection)
         const signer = provider.getSigner()
+        const address = await signer.getAddress()
 
-        const url = await uploadToIPFS()
+        const url = await uploadToIPFS(address)
 
         try {
             let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-            let transaction = await contract.createWithdrawalRequest(BigNumber.from(project.id).toNumber(), requestNo, description, amount, url)
+            let transaction = await contract.createWithdrawalRequest(BigNumber.from(project.id).toNumber(), requestNo, requestDescription, amount, url)
             const x = await transaction.wait()
 
             if (x.status == 1) {
@@ -77,8 +88,8 @@ export default function withdrawal({ project, projectID }) {
                     className='p-2 mt-5 rounded-md'
                     value={project.requestNo} />
                 <textarea
-                    onChange={e => setWithdrawalRequest({ ...withdrawalRequest, description: e.target.value })}
-                    name='description'
+                    onChange={e => setWithdrawalRequest({ ...withdrawalRequest, requestDescription: e.target.value })}
+                    name='requestDescription'
                     placeholder='Give it a description ...'
                     className='p-2 mt-5 rounded-md'
                 />
