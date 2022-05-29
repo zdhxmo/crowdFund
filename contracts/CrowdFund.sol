@@ -22,12 +22,21 @@ contract CrowdFund {
         uint256 projectDeadline,
         uint256 goal
     );
+    
     event SuccessFundRaise(
         uint256 indexed id,
         string name,
         uint256 projectDeadline,
         uint256 goal
     );
+    
+    event SuccessButContinueFundRaise(
+        uint256 indexed id,
+        string name,
+        uint256 projectDeadline,
+        uint256 goal
+    );
+
     event FundsReceive(
         uint256 indexed id,
         address contributor,
@@ -176,7 +185,6 @@ contract CrowdFund {
 
     // make contract payable
     fallback() external payable {}
-
     receive() external payable {}
 
     /*===== Functions  =====*/
@@ -235,7 +243,10 @@ contract CrowdFund {
 
     /** @dev Function to make a contribution to the project
      * @param _id Project ID where contributions are to be made
+     * TODO: if goal is reached - continue allowing more contributions
+     the only time state changes to expire is when the deadline is reached
      */
+
     function contributeFunds(uint256 _id)
         public
         payable
@@ -254,39 +265,70 @@ contract CrowdFund {
         );
 
         // add to contribution
-        contributions[_id][msg.sender] += msg.value;
+            contributions[_id][msg.sender] += msg.value;
 
-        // increase total contributions pledged to the project
-        idToProject[_id].totalPledged += msg.value;
+            // increase total contributions pledged to the project
+            idToProject[_id].totalPledged += msg.value;
 
-        // reduce money left from the goal
-        idToProject[_id].netDiff -= msg.value;
+            // reduce money left from the goal
+            idToProject[_id].netDiff -= msg.value;
 
-        // add one to total number of depositors for this project
-        idToProject[_id].totalDepositors += 1;
+            // add one to total number of depositors for this project
+            idToProject[_id].totalDepositors += 1;
 
-        // check if goal is reached within timeframe -> success
-        if (
-            idToProject[_id].totalPledged >= idToProject[_id].goal &&
-            block.timestamp < idToProject[_id].projectDeadline
-        ) {
+            emit FundsReceive(
+                _id,
+                msg.sender,
+                msg.value,
+                idToProject[_id].totalPledged,
+                idToProject[_id].netDiff
+            );
+    }
+
+    /** @dev Function to end fundraising drive
+    * @param _id Project ID
+    */
+    function endContributionsExpire(uint256 _id) 
+        public 
+        onlyProjectDonor(_id)
+        checkState(_id, State.Fundraise) 
+        {
+            require(
+                block.timestamp > idToProject[_id].projectDeadline,
+                "Contributions cannot be made to this project anymore."
+            );
+
+            idToProject[_id].currentState = State.Expire;
+            emit ExpireFundraise(_id,
+                idToProject[_id].name,
+                idToProject[_id].projectDeadline,
+                idToProject[_id].goal
+            );
+        }
+    
+    /** @dev Function to end fundraising drive with success
+    * @param _id Project ID
+    */
+    function endContributionsSuccess(uint256 _id) 
+        public 
+        onlyProjectOwner(_id)
+        checkState(_id, State.Fundraise) 
+        {
+            require(
+                block.timestamp > idToProject[_id].projectDeadline,
+                "Contributions cannot be made to this project anymore."
+            );
+
+            require(idToProject[_id].totalPledged > idToProject[_id].goal, "Did not receive enough funds");
+
             idToProject[_id].currentState = State.Success;
             emit SuccessFundRaise(
                 _id,
                 idToProject[_id].name,
                 idToProject[_id].projectDeadline,
                 idToProject[_id].goal
-            );
+            );                
         }
-
-        emit FundsReceive(
-            _id,
-            msg.sender,
-            msg.value,
-            idToProject[_id].totalPledged,
-            idToProject[_id].netDiff
-        );
-    }
 
     /** @dev Function to get refund on expired projects
      * @param _id Project ID
