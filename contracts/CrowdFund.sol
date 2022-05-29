@@ -186,6 +186,7 @@ contract CrowdFund {
     // make contract payable
     fallback() external payable {}
     receive() external payable {}
+    
 
     /*===== Functions  =====*/
 
@@ -243,10 +244,7 @@ contract CrowdFund {
 
     /** @dev Function to make a contribution to the project
      * @param _id Project ID where contributions are to be made
-     * TODO: if goal is reached - continue allowing more contributions
-     the only time state changes to expire is when the deadline is reached
      */
-
     function contributeFunds(uint256 _id)
         public
         payable
@@ -265,24 +263,24 @@ contract CrowdFund {
         );
 
         // add to contribution
-            contributions[_id][msg.sender] += msg.value;
+        contributions[_id][msg.sender] += msg.value;
 
-            // increase total contributions pledged to the project
-            idToProject[_id].totalPledged += msg.value;
+        // increase total contributions pledged to the project
+        idToProject[_id].totalPledged += msg.value;
 
-            // reduce money left from the goal
-            idToProject[_id].netDiff -= msg.value;
+        // reduce money left from the goal
+        idToProject[_id].netDiff -= msg.value;
 
-            // add one to total number of depositors for this project
-            idToProject[_id].totalDepositors += 1;
+        // add one to total number of depositors for this project
+        idToProject[_id].totalDepositors += 1;
 
-            emit FundsReceive(
-                _id,
-                msg.sender,
-                msg.value,
-                idToProject[_id].totalPledged,
-                idToProject[_id].netDiff
-            );
+        emit FundsReceive(
+            _id,
+            msg.sender,
+            msg.value,
+            idToProject[_id].totalPledged,
+            idToProject[_id].netDiff
+        );
     }
 
     /** @dev Function to end fundraising drive
@@ -319,7 +317,7 @@ contract CrowdFund {
                 "Contributions cannot be made to this project anymore."
             );
 
-            require(idToProject[_id].totalPledged > idToProject[_id].goal, "Did not receive enough funds");
+            require(idToProject[_id].totalPledged >= idToProject[_id].goal, "Did not receive enough funds");
 
             idToProject[_id].currentState = State.Success;
             emit SuccessFundRaise(
@@ -476,9 +474,9 @@ contract CrowdFund {
      * @param _id Project ID
      * @param _url new IPFS hash
      * @param _newPledged Amount pledged by contributor
-     * TODO: find a way to make this functionality internal. This CANNOT be a public function
+     * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
      */
-    function updateProject(
+    function updateProjectOnContribution(
         uint256 _id,
         string memory _url,
         uint256 _newPledged
@@ -486,6 +484,21 @@ contract CrowdFund {
         idToProject[_id].ipfsURL = _url;
         idToProject[_id].totalPledged += _newPledged;
         idToProject[_id].netDiff -= _newPledged;
+    }
+
+    /** @dev Function to update project IPFS hash on state change
+     * @param _id Project ID
+     * @param _url new IPFS hash
+     * @param _state new state of the project
+     * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
+     */
+    function updateProjectOnStateChange(
+        uint256 _id, 
+        string memory _url, 
+        State _state
+    ) public {
+        idToProject[_id].ipfsURL = _url;
+        idToProject[_id].currentState = _state;
     }
 
     /*===== Blockchain get functions =====*/

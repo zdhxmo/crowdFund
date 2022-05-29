@@ -8,14 +8,21 @@ import Link from 'next/link'
 export default function Home({ projects }) {
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
-      <p className='text-center'>this test project only works on ropsten testnet </p>
+      <p className='text-center'>this is a test project. Please don't play with non-disposable money </p>
 
-      <div className='bg-pink-500 text-white p-10 text-center rounded-md'>
+      <div className='bg-pink-500 text-white p-10 rounded-md'>
         <div>
           <p className='font-bold m-5'>How it Works</p>
-          <div className='my-3'> 1. Community contributes to project and all contributions get pooled </div>
-          <div className='my-3'> 2. Project creators write a proposal and the donors approve of fund withdrawal </div>
-          <div className='my-3'> 3. If fundraising expires without goal being met, contributors appeal to get their refunds back.  </div>
+          <p className='my-3'>1. Creator creates a new project </p>
+
+          <p className='my-3'>2. Contributors contribute until deadline</p>
+          <p className='my-3'>3. If total pledged doesn't get met on deadline date, contributors expire the project and refund donated funds back</p>
+          <p className='my-3'>4. If total amount pledged reaches the goal, creator declares the fundraise a success</p>
+          <div className='my-3'>
+            <p className='my-3 ml-10'>a. creator makes a withdrawal request</p>
+            <p className='my-3 ml-10'>b. contributors vote on the request</p>
+            <p className='my-3 ml-10'>c. if approved, creator withdraws the amount requested to work on the project</p>
+          </div>
         </div>
       </div>
       <div className='text-black'>
@@ -53,7 +60,7 @@ export default function Home({ projects }) {
           }
         </div>
       </div>
-    </div>
+    </div >
   )
 }
 

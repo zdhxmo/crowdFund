@@ -12,12 +12,14 @@ import Link from 'next/link'
 
 const ipfsURI = 'https://ipfs.io/ipfs/'
 
+/* TODO: refactor code to prevent multiple lines doing the same thing  */
+
 export default function project({ project, projectID }) {
   const router = useRouter()
 
   const [contributionValue, setContributionValue] = useState(0);
 
-  async function updateIPFS() {
+  async function updateIPFSOnContribution() {
     const { id, name, description, projectDeadline, goal, totalPledged } = project
 
     let contri = Number(totalPledged) + Number(contributionValue)
@@ -50,11 +52,74 @@ export default function project({ project, projectID }) {
       })
       let x = await transaction.wait()
 
-      /* TODO: id transaction failed, do not update state in front page */
       if (x.status == 1) {
-        const url = await updateIPFS()
+        const url = await updateIPFSOnContribution()
 
-        let projectUpdate = await contract.updateProject(project.id, url, contributionValue)
+        let projectUpdate = await contract.updateProjectOnContribution(project.id, url, contributionValue)
+        let y = await projectUpdate.wait()
+        if (y.status == 1) router.push('/')
+      }
+    } catch (err) {
+      window.alert(err.message)
+    }
+  }
+
+  async function updateIPFSOnStateChange(newState) {
+    const { id, name, description, projectDeadline, goal, totalPledged } = project
+
+    const data = JSON.stringify({
+      id: id, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: totalPledged, currentState: newState
+    });
+
+    try {
+      // use client to add data
+      const added = await client.add(data)
+      // return url
+      const url = `${added.path}`
+      return url
+    } catch (error) {
+      console.log('Error uploading file: ', error)
+    }
+  }
+
+  async function changeStateToSuccess() {
+    const web3Modal = new Web3Modal()
+    const connection = await web3Modal.connect()
+    const provider = new ethers.providers.Web3Provider(connection)
+    const signer = provider.getSigner()
+    try {
+      let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+      let tx = await contract.endContributionsSuccess(BigNumber.from(project.id).toNumber());
+      let x = await tx.wait()
+
+      if (x.status == 1) {
+        // state = 2 when success
+        const newState = 2;
+        const url = await updateIPFSOnStateChange(newState);
+        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url, newState);
+        let y = await projectUpdate.wait()
+        if (y.status == 1) router.push('/')
+      }
+    } catch (err) {
+      window.alert(err.message)
+    }
+  }
+
+  async function changeStateToExpire() {
+    const web3Modal = new Web3Modal()
+    const connection = await web3Modal.connect()
+    const provider = new ethers.providers.Web3Provider(connection)
+    const signer = provider.getSigner()
+    try {
+      let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+      let tx = await contract.endContributionsExpire(BigNumber.from(project.id).toNumber());
+      let x = await tx.wait()
+
+      if (x.status == 1) {
+        // state = 2 on expire
+        const newState = 1;
+        const url = await updateIPFSOnStateChange(newState);
+        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url, newState);
         let y = await projectUpdate.wait()
         if (y.status == 1) router.push('/')
       }
@@ -64,8 +129,8 @@ export default function project({ project, projectID }) {
   }
 
   return (
-    <div className='grid mt-20 grid-cols-1'>
-      <div className='bg-pink-500 text-white p-20 text-center rounded-md mx-20 mt-20'>
+    <div className='grid mt-20 grid-cols-1 w-50'>
+      <div className='bg-pink-500 text-white p-20 rounded-md mx-20 mt-20'>
         <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>
         <p className='my-6'><span className='font-bold'> Creator: </span> {project.creator}</p>
         <p className='my-6'><span className='font-bold'> Project Name: </span> {project.name}</p>
@@ -74,7 +139,6 @@ export default function project({ project, projectID }) {
         <p className='my-6'><span className='font-bold'>Total ETH pledged:</span> {project.totalPledged} ETH</p>
         <p className='my-6'><span className='font-bold'>Fundraise Goal:</span> {project.goal} ETH</p>
 
-        {/* Add contribution functionality */}
         <input
           onChange={e => setContributionValue(e.target.value)}
           type='number'
@@ -82,6 +146,12 @@ export default function project({ project, projectID }) {
           value={contributionValue}
         />
         <button onClick={contribute} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-md'>Contribute</button>
+
+        {/* TODO: add this functionality */}
+        <div className='flex'>
+          <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise was a success</button>
+          <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired</button>
+        </div>
       </div>
 
       <div className='grid grid-cols-3 px-10'>
@@ -96,8 +166,6 @@ export default function project({ project, projectID }) {
         <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
 
       </div>
-
-
     </div>
   )
 }
