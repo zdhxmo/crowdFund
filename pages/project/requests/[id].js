@@ -1,6 +1,7 @@
 import { ethers, BigNumber } from 'ethers'
 import Web3Modal from 'web3modal'
 import { useState } from 'react'
+import { useRouter } from 'next/router'
 
 import {
     contractAddress
@@ -12,6 +13,7 @@ import { create as ipfsHttpClient } from 'ipfs-http-client'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 
 export default function requests({ project, projectID }) {
+    const router = useRouter()
     const [withdrawalRequests, setWithdrawalRequests] = useState([])
     // console.log(withdrawalRequests)
 
@@ -46,7 +48,7 @@ export default function requests({ project, projectID }) {
         }
     }
 
-    async function approveRequest(r) {
+    async function approveRequest(r, projectID) {
         const web3Modal = new Web3Modal()
         const connection = await web3Modal.connect()
         const provider = new ethers.providers.Web3Provider(connection)
@@ -59,9 +61,8 @@ export default function requests({ project, projectID }) {
 
             if (x.status == 1) {
                 const url = await updateIPFSOnApproval(r);
-                // if approved +1
-                // if rejected -1
-                let requestUpdate = await contract.updateRequestState(project.id, url, 1);
+                // if approved +1; if rejected -1
+                let requestUpdate = await contract.updateRequestState(project.id, r[0], url);
                 let y = await requestUpdate.wait();
                 if (y.status == 1) router.push(`/project/${projectID}`)
 
@@ -87,14 +88,15 @@ export default function requests({ project, projectID }) {
                                 <div className='p-4'>
                                     <p className='py-4'>request number: {request[0]}</p>
                                     <p className='py-4'>description: {request[1]}</p>
-                                    <p className='py-4'>amount: {BigNumber.from(request[2]).toNumber()}</p>
+                                    <p className='py-4'>amount: {BigNumber.from(request[2]).toNumber()} ETH</p>
                                     <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
                                     <p>Details: <a href={'https://ipfs.io/ipfs/' + request[6]}>click here</a></p>
 
-                                    {/* <div className='flex-auto '>
-                                        <button onClick={() => approveRequest(request)} className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
-                                        <button className="bg-white text-black rounded-md my-10 px-3 mx-5 py-2 shadow-lg border-2">Reject</button>
-                                    </div> */}
+                                    <div className='flex-auto '>
+                                        <button onClick={() => approveRequest(request, projectID)} className="bg-white text-black rounded-md my-10 mx-1 px-3 py-2 shadow-lg border-2">Approve</button>
+                                        <button className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Reject</button>
+                                        <button className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Withdraw</button>
+                                    </div>
                                 </div>
                             </div>
                         )

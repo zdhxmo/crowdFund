@@ -515,11 +515,10 @@ contract CrowdFund {
     /** @dev Function to update withdrawal request IPFS hash and votes on state change
      * @param _id Project ID
      * @param _url new IPFS hash
-     * @param _voteChange new state of the approval count
      * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
      */
-    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url, uint256 _voteChange) public {
-        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes += _voteChange;
+    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
+        // idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes += _voteChange;
         idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
     }
 

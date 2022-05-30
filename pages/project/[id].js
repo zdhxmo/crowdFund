@@ -58,7 +58,7 @@ export default function project({ project, projectID }) {
 
         let projectUpdate = await contract.updateProjectOnContribution(project.id, url, contributionValue)
         let y = await projectUpdate.wait()
-        if (y.status == 1) router.push(`/project/${projectID}`)
+        if (y.status == 1) router.push('/')
       }
     } catch (err) {
       window.alert(err.message)
