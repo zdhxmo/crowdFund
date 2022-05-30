@@ -61,7 +61,29 @@ export default function requests({ project, projectID }) {
 
             if (x.status == 1) {
                 const url = await updateIPFSOnApproval(r);
-                // if approved +1; if rejected -1
+                let requestUpdate = await contract.updateRequestState(project.id, r[0], url);
+                let y = await requestUpdate.wait();
+                if (y.status == 1) router.push(`/project/${projectID}`)
+
+            }
+        } catch (err) {
+            window.alert(err.message)
+        }
+    }
+
+    async function rejectRequest(r, projectID) {
+        const web3Modal = new Web3Modal()
+        const connection = await web3Modal.connect()
+        const provider = new ethers.providers.Web3Provider(connection)
+        const signer = provider.getSigner()
+
+        try {
+            let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            let tx = await contract.rejectWithdrawalRequest(project.id, r[0])
+            let x = await tx.wait()
+
+            if (x.status == 1) {
+                const url = await updateIPFSOnApproval(r);
                 let requestUpdate = await contract.updateRequestState(project.id, r[0], url);
                 let y = await requestUpdate.wait();
                 if (y.status == 1) router.push(`/project/${projectID}`)
@@ -94,7 +116,7 @@ export default function requests({ project, projectID }) {
 
                                     <div className='flex-auto '>
                                         <button onClick={() => approveRequest(request, projectID)} className="bg-white text-black rounded-md my-10 mx-1 px-3 py-2 shadow-lg border-2">Approve</button>
-                                        <button className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Reject</button>
+                                        <button onClick={() => rejectRequest(request, projectID)} className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Reject</button>
                                         <button className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Withdraw</button>
                                     </div>
                                 </div>

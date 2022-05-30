@@ -21,12 +21,14 @@ export default function project({ project, projectID }) {
   const [contributionValue, setContributionValue] = useState(0);
 
   async function updateIPFSOnContribution() {
-    const { id, name, description, projectDeadline, goal, totalPledged } = project
+    const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors } = project
 
     let contri = Number(totalPledged) + Number(contributionValue)
+    let newDepositors = Number(totalDepositors) + 1
+
     // stringify JSON data
     const data = JSON.stringify({
-      id: id, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: contri
+      id: id, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: contri, totalDepositors: newDepositors
     });
 
     try {
@@ -145,6 +147,7 @@ export default function project({ project, projectID }) {
         <p className='my-6'><span className='font-bold'>Crowdfund deadline:</span> {new Date((BigNumber.from(project.projectDeadline).toNumber()) * 1000).toLocaleDateString()}</p>
         <p className='my-6'><span className='font-bold'>Total ETH pledged:</span> {project.totalPledged} ETH</p>
         <p className='my-6'><span className='font-bold'>Fundraise Goal:</span> {project.goal} ETH</p>
+        <p className='my-6'><span className='font-bold'>Total Contributors:</span> {project.totalDepositors}</p>
 
         <input
           onChange={e => setContributionValue(e.target.value)}

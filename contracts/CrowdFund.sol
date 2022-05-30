@@ -425,7 +425,7 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        require(approvals[_id][msg.sender] == 0, "Invalid operation. You have already approved this request");
+        require(approvals[_id][msg.sender] == 1, "Invalid operation. You have already approved this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
