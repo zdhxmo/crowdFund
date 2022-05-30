@@ -127,9 +127,10 @@ contract CrowdFund {
     mapping(uint256 => mapping(address => uint256)) public contributions;
 
     // withdrawal requests
-    mapping(uint256 => WithdrawalRequest) public idToWithdrawalRequests;
+    mapping(uint256 => WithdrawalRequest[]) public idToWithdrawalRequests;
     // project ID => withdrawal request Index
     mapping(uint256 => uint32) latestWithdrawalIndex;
+    mapping(uint256 => mapping(address => uint8)) approvals;
 
     /*===== Modifiers =====*/
     modifier checkState(uint256 _id, State _state) {
@@ -223,6 +224,9 @@ contract CrowdFund {
 
         // update mapping of id to new project
         idToProject[projectCount] = newFR;
+
+        // initiate total withdrawal requests 
+        latestWithdrawalIndex[projectCount] = 0;
 
         // emit event
         emit NewProjectCreated(
@@ -369,9 +373,9 @@ contract CrowdFund {
         });
 
         // update project to request mapping
-        idToWithdrawalRequests[_id] = newWR;
+        idToWithdrawalRequests[_id].push(newWR);
         
-        latestWithdrawalIndex[_id] = _requestNumber;
+        latestWithdrawalIndex[_id] += 1;
 
         // emit event
         emit NewWithdrawalRequest(_id, _description, _amount);
@@ -390,7 +394,21 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        idToWithdrawalRequests[_id].approvedVotes += 1;
+        require(approvals[_id][msg.sender] == 0, "Invalid operation. You have already approved this request");
+
+        // get total withdrawal requests made
+        uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
+
+        // iterate over all requests for this project
+        for (uint256 i = 0; i < _lastWithdrawal; i++) {
+            // if request number is equal to index
+            if(i + 1 == _withdrawalRequestIndex) {
+                // increment approval count
+                idToWithdrawalRequests[_id][i].approvedVotes += 1;
+            }
+        }
+
+        approvals[_id][msg.sender] += 1;
         emit ApproveRequest(_id, _withdrawalRequestIndex);
     }
 
@@ -407,7 +425,21 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        idToWithdrawalRequests[_id].approvedVotes -= 1;
+        require(approvals[_id][msg.sender] == 0, "Invalid operation. You have already approved this request");
+
+        // get total withdrawal requests made
+        uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
+
+        // iterate over all requests for this project
+        for (uint256 i = 0; i < _lastWithdrawal; i++) {
+            // if request number is equal to index
+            if(i + 1 == _withdrawalRequestIndex) {
+                // increment approval count
+                idToWithdrawalRequests[_id][i].approvedVotes -= 1;
+            }
+        }
+
+        approvals[_id][msg.sender] -= 1;
         emit RejectRequest(_id, _withdrawalRequestIndex);
     }
 
@@ -426,26 +458,26 @@ contract CrowdFund {
     {
         // require quorum
         require(
-            idToWithdrawalRequests[_id].approvedVotes >
-                (idToProject[_id].totalDepositors).div(2),
+            // _withdrawalRequestIndex - 1 to accomodate 0 start of arrays
+            idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes >
+                    (idToProject[_id].totalDepositors).div(2)
+            ,
             "More than half the total depositors need to approve withdrawal request"
         );
 
         // platform fee - $1 for every $100 withdrawn
-        uint256 platformFee = idToWithdrawalRequests[_id].withdrawalAmount /
-            100;
+        uint256 platformFee = (idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount) / 100;
         platformAdmin.transfer(platformFee);
 
         // transfer remaining funds to project creator
         payable(idToProject[_id].creator).transfer(
-            idToWithdrawalRequests[_id].withdrawalAmount - platformFee
+            idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount - platformFee
         );
 
         // approved votes set to 0 for the next request cycle
-        idToWithdrawalRequests[_id].approvedVotes = 0;
+        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes = 0;
 
-        idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id]
-            .withdrawalAmount;
+        idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount;
 
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
     }
@@ -478,6 +510,17 @@ contract CrowdFund {
     ) public {
         idToProject[_id].ipfsURL = _url;
         idToProject[_id].currentState = _state;
+    }
+
+    /** @dev Function to update withdrawal request IPFS hash and votes on state change
+     * @param _id Project ID
+     * @param _url new IPFS hash
+     * @param _voteChange new state of the approval count
+     * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
+     */
+    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url, uint256 _voteChange) public {
+        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes += _voteChange;
+        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
     }
 
     /*===== Blockchain get functions =====*/
@@ -544,8 +587,7 @@ contract CrowdFund {
             _lastWithdrawal
         );
         for (uint256 i = 0; i < _lastWithdrawal; i++) {
-            uint256 currentId = i + 1;
-            WithdrawalRequest storage currentRequest = idToWithdrawalRequests[currentId];
+            WithdrawalRequest storage currentRequest = idToWithdrawalRequests[_id][i];
             withdrawals[i] = currentRequest;
         }
 

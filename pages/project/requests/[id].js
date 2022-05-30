@@ -1,14 +1,19 @@
 import { ethers, BigNumber } from 'ethers'
+import Web3Modal from 'web3modal'
+import { useState } from 'react'
+
 import {
     contractAddress
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
+
 const ipfsURI = 'https://ipfs.io/ipfs/'
-import Web3Modal from 'web3modal'
-import { useState } from 'react'
+import { create as ipfsHttpClient } from 'ipfs-http-client'
+const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 
 export default function requests({ project, projectID }) {
     const [withdrawalRequests, setWithdrawalRequests] = useState([])
+    // console.log(withdrawalRequests)
 
     async function getRequests() {
         const web3Modal = new Web3Modal()
@@ -20,6 +25,47 @@ export default function requests({ project, projectID }) {
             let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
             let x = await contract.getAllWithdrawalRequests(project.id)
             setWithdrawalRequests(x);
+        } catch (err) {
+            window.alert(err.message)
+        }
+    }
+
+    async function updateIPFSOnApproval(r) {
+        const data = JSON.stringify({
+            index: r[0], description: r[1], withdrawalAmount: r[2], recipient: r[3], approvedVotes: r[4] + 1, currentWithdrawalState: r[5], ipfsHash: r[6]
+        });
+
+        try {
+            // use client to add data
+            const added = await client.add(data)
+            // return url
+            const url = `${added.path}`
+            return url
+        } catch (error) {
+            console.log('Error uploading file: ', error)
+        }
+    }
+
+    async function approveRequest(r) {
+        const web3Modal = new Web3Modal()
+        const connection = await web3Modal.connect()
+        const provider = new ethers.providers.Web3Provider(connection)
+        const signer = provider.getSigner()
+
+        try {
+            let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            let tx = await contract.approveWithdrawalRequest(project.id, r[0])
+            let x = await tx.wait()
+
+            if (x.status == 1) {
+                const url = await updateIPFSOnApproval(r);
+                // if approved +1
+                // if rejected -1
+                let requestUpdate = await contract.updateRequestState(project.id, url, 1);
+                let y = await requestUpdate.wait();
+                if (y.status == 1) router.push(`/project/${projectID}`)
+
+            }
         } catch (err) {
             window.alert(err.message)
         }
@@ -39,15 +85,16 @@ export default function requests({ project, projectID }) {
                         withdrawalRequests.map(request =>
                             <div className='border shadow rounded-xl overflow-hidden' key={request[0]}>
                                 <div className='p-4'>
-                                    <p className='py-4'>id: {request[0]}</p>
+                                    <p className='py-4'>request number: {request[0]}</p>
                                     <p className='py-4'>description: {request[1]}</p>
                                     <p className='py-4'>amount: {BigNumber.from(request[2]).toNumber()}</p>
                                     <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
+                                    <p>Details: <a href={'https://ipfs.io/ipfs/' + request[6]}>click here</a></p>
 
-                                    <div className='flex-auto '>
-                                        <button className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
+                                    {/* <div className='flex-auto '>
+                                        <button onClick={() => approveRequest(request)} className="bg-white text-black rounded-md my-10 mx-5 px-3 py-2 shadow-lg border-2">Approve</button>
                                         <button className="bg-white text-black rounded-md my-10 px-3 mx-5 py-2 shadow-lg border-2">Reject</button>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         )

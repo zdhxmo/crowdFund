@@ -86,7 +86,7 @@ export default function withdrawal({ project, projectID }) {
                     name='requestNo'
                     placeholder='Request number...'
                     className='p-2 mt-5 rounded-md'
-                    value={project.requestNo} />
+                    value={withdrawalRequest.requestNo} />
                 <textarea
                     onChange={e => setWithdrawalRequest({ ...withdrawalRequest, requestDescription: e.target.value })}
                     name='requestDescription'

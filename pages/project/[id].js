@@ -5,8 +5,10 @@ import CrowdFund from "../../build/contracts/CrowdFund.json"
 import { BigNumber, ethers, web3 } from 'ethers'
 import Web3Modal from 'web3modal'
 import { useState } from 'react' // new
+
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
+
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
@@ -16,7 +18,6 @@ const ipfsURI = 'https://ipfs.io/ipfs/'
 
 export default function project({ project, projectID }) {
   const router = useRouter()
-
   const [contributionValue, setContributionValue] = useState(0);
 
   async function updateIPFSOnContribution() {
@@ -57,7 +58,7 @@ export default function project({ project, projectID }) {
 
         let projectUpdate = await contract.updateProjectOnContribution(project.id, url, contributionValue)
         let y = await projectUpdate.wait()
-        if (y.status == 1) router.push('/')
+        if (y.status == 1) router.push(`/project/${projectID}`)
       }
     } catch (err) {
       window.alert(err.message)
@@ -134,6 +135,7 @@ export default function project({ project, projectID }) {
   }
 
   return (
+    /* make long description wrap around  */
     <div className='grid mt-20 grid-cols-1 w-50'>
       <div className='bg-pink-500 text-white p-20 rounded-md mx-20 mt-20'>
         <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>
@@ -154,8 +156,8 @@ export default function project({ project, projectID }) {
 
         {/* TODO: add this functionality */}
         <div className='flex'>
-          <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise was a success</button>
-          <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired</button>
+          <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise was a success (project owner only)</button>
+          <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired (contributors only)</button>
         </div>
       </div>
 
@@ -171,7 +173,7 @@ export default function project({ project, projectID }) {
         <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
 
       </div>
-    </div>
+    </div >
   )
 }
 
