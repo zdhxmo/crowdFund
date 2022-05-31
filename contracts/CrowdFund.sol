@@ -130,7 +130,16 @@ contract CrowdFund {
     mapping(uint256 => WithdrawalRequest[]) public idToWithdrawalRequests;
     // project ID => withdrawal request Index
     mapping(uint256 => uint32) latestWithdrawalIndex;
-    mapping(uint256 => mapping(address => uint8)) approvals;
+
+    // project ID => contributor address => 1/0
+    // mapping(uint256 => mapping(address => uint8)) approvals;
+
+    // id => request number => address
+    mapping(uint256 => mapping(uint32 => address)) approvals;
+
+    // ipfs hash => contributor address => 1/0
+    // mapping(string => mapping(address => uint8)) public approvals;
+
 
     /*===== Modifiers =====*/
     modifier checkState(uint256 _id, State _state) {
@@ -394,7 +403,7 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        require(approvals[_id][msg.sender] == 0, "Invalid operation. You have already approved this request");
+        require(approvals[_id][_withdrawalRequestIndex - 1] == address(0), "Invalid operation. You have already approved this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -408,7 +417,7 @@ contract CrowdFund {
             }
         }
 
-        approvals[_id][msg.sender] += 1;
+        approvals[_id][_withdrawalRequestIndex - 1] = msg.sender;
         emit ApproveRequest(_id, _withdrawalRequestIndex);
     }
 
@@ -425,7 +434,7 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        require(approvals[_id][msg.sender] == 1, "Invalid operation. You have already approved this request");
+        require(approvals[_id][_withdrawalRequestIndex - 1] == msg.sender, "Invalid operation. You have already rejected this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -439,7 +448,7 @@ contract CrowdFund {
             }
         }
 
-        approvals[_id][msg.sender] -= 1;
+        approvals[_id][_withdrawalRequestIndex - 1] = address(0);
         emit RejectRequest(_id, _withdrawalRequestIndex);
     }
 

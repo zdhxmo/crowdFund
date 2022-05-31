@@ -94,6 +94,8 @@ export default function requests({ project, projectID }) {
         }
     }
 
+    /* TODO::: wrap excess text in decsription */
+
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
             <p className='text-center'>Only project contributors can access this functionality</p>
@@ -106,13 +108,14 @@ export default function requests({ project, projectID }) {
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
                     {
                         withdrawalRequests.map(request =>
-                            <div className='border shadow rounded-xl overflow-hidden' key={request[0]}>
+                            <div className='border shadow rounded-xl text-left' key={request[0]}>
                                 <div className='p-4'>
                                     <p className='py-4'>request number: {request[0]}</p>
-                                    <p className='py-4'>description: {request[1]}</p>
+                                    <p className='py-4 text-overflow: ellipsis'>description: {request[1]}</p>
                                     <p className='py-4'>amount: {BigNumber.from(request[2]).toNumber()} ETH</p>
                                     <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
                                     <p>Details: <a href={'https://ipfs.io/ipfs/' + request[6]}>click here</a></p>
+                                    <p className='py-4'>total depositor: {project.totalDepositors}</p>
 
                                     <div className='flex-auto '>
                                         <button onClick={() => approveRequest(request, projectID)} className="bg-white text-black rounded-md my-10 mx-1 px-3 py-2 shadow-lg border-2">Approve</button>
