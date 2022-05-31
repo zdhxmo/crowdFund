@@ -135,7 +135,8 @@ contract CrowdFund {
     // mapping(uint256 => mapping(address => uint8)) approvals;
 
     // id => request number => address
-    mapping(uint256 => mapping(uint32 => address)) approvals;
+    mapping(uint256 => mapping(uint32 => address[])) approvals;
+    mapping(uint256 => mapping(uint32 => address[])) rejections;
 
     // ipfs hash => contributor address => 1/0
     // mapping(string => mapping(address => uint8)) public approvals;
@@ -390,6 +391,47 @@ contract CrowdFund {
         emit NewWithdrawalRequest(_id, _description, _amount);
     }
 
+    /** @dev Function ti check whether a given address has approved a specific request
+    * @param _id Project ID
+    * @param _withdrawalRequestIndex Index of the withdrawal request
+    * @param _checkAddress Address of the request initiator
+    */
+    function checkAddressInApprovalsIterator(
+        uint256 _id,
+        uint32 _withdrawalRequestIndex, 
+        address _checkAddress
+    )
+        public
+        view 
+        returns(bool) 
+    {
+        // iterate over the array specific to this id and withdrawal request
+        for (uint256 i = 0; i < approvals[_id][_withdrawalRequestIndex - 1].length; i++) {
+            // if address is in the array, return true
+            if(approvals[_id][_withdrawalRequestIndex - 1][i] == _checkAddress) {
+                return true;
+            }
+        }
+    }
+
+    function checkAddressInRejectionIterator(
+        uint256 _id,
+        uint32 _withdrawalRequestIndex, 
+        address _checkAddress
+    ) 
+        public
+        view
+        returns(bool) 
+    {
+        // iterate over the array specific to this id and withdrawal request
+        for (uint256 i = 0; i < rejections[_id][_withdrawalRequestIndex - 1].length; i++) {
+            // if address is in the array, return true
+            if(rejections[_id][_withdrawalRequestIndex - 1][i] == _checkAddress) {
+                return true;
+            }
+        }
+    }
+
     /** @dev Function to approve withdrawal of funds
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of withdrawal request
@@ -403,7 +445,10 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        require(approvals[_id][_withdrawalRequestIndex - 1] == address(0), "Invalid operation. You have already approved this request");
+        // confirm msg.sender hasn't approved request yet
+        require(!checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have already approved this request");
+
+        require(!checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have rejected this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -417,7 +462,9 @@ contract CrowdFund {
             }
         }
 
-        approvals[_id][_withdrawalRequestIndex - 1] = msg.sender;
+        // push msg.sender to approvals list for this request
+        approvals[_id][_withdrawalRequestIndex - 1].push(msg.sender);
+        
         emit ApproveRequest(_id, _withdrawalRequestIndex);
     }
 
@@ -434,7 +481,10 @@ contract CrowdFund {
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        require(approvals[_id][_withdrawalRequestIndex - 1] == msg.sender, "Invalid operation. You have already rejected this request");
+        // confirm user hasn't approved request
+        require(!checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have approved this request");
+
+        require(!checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have already rejected this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -448,7 +498,9 @@ contract CrowdFund {
             }
         }
 
-        approvals[_id][_withdrawalRequestIndex - 1] = address(0);
+        // add msg.sender to rejections list for this request
+        rejections[_id][_withdrawalRequestIndex - 1].push(msg.sender);
+
         emit RejectRequest(_id, _withdrawalRequestIndex);
     }
 

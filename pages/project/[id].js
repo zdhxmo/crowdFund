@@ -21,14 +21,14 @@ export default function project({ project, projectID }) {
   const [contributionValue, setContributionValue] = useState(0);
 
   async function updateIPFSOnContribution() {
-    const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors } = project
+    const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors, creator } = project
 
     let contri = Number(totalPledged) + Number(contributionValue)
     let newDepositors = Number(totalDepositors) + 1
 
     // stringify JSON data
     const data = JSON.stringify({
-      id: id, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: contri, totalDepositors: newDepositors
+      id: id, name: name, creator: creator, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: contri, totalDepositors: newDepositors
     });
 
     try {
@@ -170,7 +170,7 @@ export default function project({ project, projectID }) {
         </Link>
 
         <Link href={`requests/${projectID}`}>
-          <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject Request</button>
+          <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject/Withdraw</button>
         </Link>
 
         <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
