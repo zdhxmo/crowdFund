@@ -2,8 +2,9 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract CrowdFund {
+contract CrowdFund is ReentrancyGuard {
     using SafeMath for uint256;
 
     /*===== Events =====*/
@@ -65,6 +66,10 @@ contract CrowdFund {
         uint32 _withdrawalRequestIndex
     );
 
+    event PayCreator( uint256 indexed _id, uint32 _withdrawalRequestIndex, uint256 _amountTransfered);
+
+    event PayPlatform(uint256 indexed _id, uint32 _withdrawalRequestIndex, uint256 _amountTransfered);
+
     /*===== State variables =====*/
     address payable platformAdmin;
 
@@ -83,7 +88,7 @@ contract CrowdFund {
         // project ID
         uint256 id;
         // address of the creator of project
-        address creator;
+        address payable creator;
         // name of the project
         string name;
         // description of the project
@@ -111,14 +116,18 @@ contract CrowdFund {
         // amount of withdrawal requested
         uint256 withdrawalAmount;
         // project owner address
-        address recipient;
+        address payable recipient;
         // total votes received for request
         uint256 approvedVotes;
         // current state of the withdrawal request
         Withdrawal currentWithdrawalState;
         // hash of the ipfs storage
         string ipfsHash;
+        // boolean to represent if amount has been withdrawn
+        bool withdrawn;
     }
+
+    mapping(address => uint) balances;
 
     // project states
     uint256 public projectCount;
@@ -131,15 +140,9 @@ contract CrowdFund {
     // project ID => withdrawal request Index
     mapping(uint256 => uint32) latestWithdrawalIndex;
 
-    // project ID => contributor address => 1/0
-    // mapping(uint256 => mapping(address => uint8)) approvals;
-
     // id => request number => address
     mapping(uint256 => mapping(uint32 => address[])) approvals;
     mapping(uint256 => mapping(uint32 => address[])) rejections;
-
-    // ipfs hash => contributor address => 1/0
-    // mapping(string => mapping(address => uint8)) public approvals;
 
 
     /*===== Modifiers =====*/
@@ -186,13 +189,15 @@ contract CrowdFund {
         _;
     }
 
-    constructor() {
+    constructor() ReentrancyGuard() {
         platformAdmin = payable(msg.sender);
         projectCount = 0;
     }
 
     // make contract payable
-    fallback() external payable {}
+    fallback() external payable {
+        platformAdmin.transfer(msg.value);
+    }
     receive() external payable {}
     
 
@@ -220,7 +225,7 @@ contract CrowdFund {
         // create new fundraise object
         Project memory newFR = Project({
             id: projectCount,
-            creator: msg.sender,
+            creator: payable(msg.sender),
             name: _name,
             description: _description,
             projectDeadline: _projectDeadline,
@@ -256,6 +261,7 @@ contract CrowdFund {
         public
         payable
         checkState(_id, State.Fundraise)
+        nonReentrant()
     {
         require(_id <= projectCount, "Project ID out of range");
 
@@ -268,6 +274,9 @@ contract CrowdFund {
             block.timestamp <= idToProject[_id].projectDeadline,
             "Contributions cannot be made to this project anymore."
         );
+
+        // transfer contributions to contract address
+        balances[address(this)] += msg.value;
 
         // add to contribution
         contributions[_id][msg.sender] += msg.value;
@@ -334,6 +343,7 @@ contract CrowdFund {
         payable
         onlyProjectDonor(_id)
         checkState(_id, State.Expire)
+        nonReentrant()
     {
         require(
             block.timestamp > idToProject[_id].projectDeadline,
@@ -357,7 +367,7 @@ contract CrowdFund {
     * @param _id Project ID
     * @param _requestNumber Index of the request
     * @param _description  Purpose of withdrawal
-    * @param _amount Amount of withdrawal requested in Wei
+    * @param _amount Amount of withdrawal requested in ETH
     */
     function createWithdrawalRequest(
         uint256 _id,
@@ -368,18 +378,21 @@ contract CrowdFund {
     ) public onlyProjectOwner(_id) checkState(_id, State.Success){
         require(idToProject[_id].totalWithdrawn < idToProject[_id].totalPledged, "Insufficient funds");
 
+        uint256 _withdraw = _amount * 1e18;
+
         // create new withdrawal request
         WithdrawalRequest memory newWR = WithdrawalRequest({
             index: _requestNumber,
             description: _description,
-            withdrawalAmount: _amount,
+            withdrawalAmount: _withdraw,
             // funds withdrawn to project owner
             recipient: idToProject[_id].creator,
             // initialized with no votes for request
             approvedVotes: 0,
             // state changes on quorum
             currentWithdrawalState: Withdrawal.Reject,
-            ipfsHash: _url
+            ipfsHash: _url,
+            withdrawn: false
         });
 
         // update project to request mapping
@@ -391,7 +404,7 @@ contract CrowdFund {
         emit NewWithdrawalRequest(_id, _description, _amount);
     }
 
-    /** @dev Function ti check whether a given address has approved a specific request
+    /** @dev Function to check whether a given address has approved a specific request
     * @param _id Project ID
     * @param _withdrawalRequestIndex Index of the withdrawal request
     * @param _checkAddress Address of the request initiator
@@ -414,6 +427,11 @@ contract CrowdFund {
         }
     }
 
+    /** @dev Function to check whether a given address has rejected a specific request
+    * @param _id Project ID
+    * @param _withdrawalRequestIndex Index of the withdrawal request
+    * @param _checkAddress Address of the request initiator
+    */
     function checkAddressInRejectionIterator(
         uint256 _id,
         uint32 _withdrawalRequestIndex, 
@@ -507,6 +525,7 @@ contract CrowdFund {
     /** @dev Function to transfer funds to project creator
      * @param _id Project ID
      * @param _withdrawalRequestIndex Index of withdrawal request
+     * TODO::: redirect a 0.3% transaction to platform admin
      */
     function transferWithdrawalRequestFunds(
         uint256 _id,
@@ -516,6 +535,7 @@ contract CrowdFund {
         payable
         onlyProjectOwner(_id)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
+        nonReentrant()
     {
         // require quorum
         require(
@@ -526,19 +546,28 @@ contract CrowdFund {
             "More than half the total depositors need to approve withdrawal request"
         );
 
-        // platform fee - $1 for every $100 withdrawn
-        uint256 platformFee = (idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount) / 100;
-        platformAdmin.transfer(platformFee);
+        require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount < idToProject[_id].totalPledged, "Insufficient funds");
 
-        // transfer remaining funds to project creator
-        payable(idToProject[_id].creator).transfer(
-            idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount - platformFee
-        );
+        WithdrawalRequest storage cRequest = idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1];
 
-        // approved votes set to 0 for the next request cycle
-        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes = 0;
+        // platform fee -> 1 for every 100 withdrawn
+        // uint256 platformFee = cRequest.withdrawalAmount / 1e19;
+        // (bool pfSuccess, ) = platformAdmin.call{value: platformFee}("");
+        // require(pfSuccess, "Transaction failed. Please try again later.");
+        // emit PayPlatform(_id, _withdrawalRequestIndex, platformFee);
 
-        idToProject[_id].totalWithdrawn += idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount;
+        // transfer (total - platform fee) to project creator
+        // address payable _creator = idToProject[_id].creator;
+        // uint256 _amount = cRequest.withdrawalAmount - platformFee;
+        
+        address payable _creator = idToProject[_id].creator;
+        uint256 _amount = cRequest.withdrawalAmount;
+        (bool success, ) = _creator.call{value: _amount}("");
+        require(success, "Transaction failed. Please try again later.");
+        emit PayCreator(_id, _withdrawalRequestIndex, _amount);
+
+        idToProject[_id].totalWithdrawn += cRequest.withdrawalAmount;
+
 
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
     }
@@ -578,8 +607,8 @@ contract CrowdFund {
      * @param _url new IPFS hash
      * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
      */
-    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
-        // idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes += _voteChange;
+    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, bool _withdrawn,string memory _url) public {
+        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn = _withdrawn;
         idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
     }
 

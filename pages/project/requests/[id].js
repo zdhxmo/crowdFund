@@ -12,6 +12,7 @@ const ipfsURI = 'https://ipfs.io/ipfs/'
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 
+/* change to 3 paramters ---- updateRequestState */
 export default function requests({ project, projectID }) {
     const router = useRouter()
     const [withdrawalRequests, setWithdrawalRequests] = useState([])
@@ -31,15 +32,29 @@ export default function requests({ project, projectID }) {
         }
     }
 
-    async function updateIPFSOnApproval(r) {
+    async function updateIPFSContributors(r) {
         const data = JSON.stringify({
-            index: r[0], description: r[1], withdrawalAmount: r[2], recipient: r[3], approvedVotes: r[4] + 1, currentWithdrawalState: r[5], ipfsHash: r[6]
+            index: r[0], description: r[1], withdrawalAmount: r[2], recipient: r[3], approvedVotes: r[4] + 1, currentWithdrawalState: r[5], ipfsHash: r[6], withdrawn: false
         });
 
         try {
             // use client to add data
             const added = await client.add(data)
-            // return url
+            const url = `${added.path}`
+            return url
+        } catch (error) {
+            console.log('Error uploading file: ', error)
+        }
+    }
+
+    async function updateIPFSCreator(r) {
+        const data = JSON.stringify({
+            index: r[0], description: r[1], withdrawalAmount: r[2], recipient: r[3], approvedVotes: r[4], currentWithdrawalState: r[5], ipfsHash: r[6], withdrawn: true
+        });
+
+        try {
+            // use client to add data
+            const added = await client.add(data)
             const url = `${added.path}`
             return url
         } catch (error) {
@@ -59,8 +74,8 @@ export default function requests({ project, projectID }) {
             let x = await tx.wait()
 
             if (x.status == 1) {
-                const url = await updateIPFSOnApproval(r);
-                let requestUpdate = await contract.updateRequestState(project.id, r[0], url);
+                const url = await updateIPFSContributors(r);
+                let requestUpdate = await contract.updateRequestState(project.id, r[0], false, url);
                 let y = await requestUpdate.wait();
                 if (y.status == 1) router.push(`/project/${projectID}`)
 
@@ -82,8 +97,8 @@ export default function requests({ project, projectID }) {
             let x = await tx.wait()
 
             if (x.status == 1) {
-                const url = await updateIPFSOnApproval(r);
-                let requestUpdate = await contract.updateRequestState(project.id, r[0], url);
+                const url = await updateIPFSContributors(r);
+                let requestUpdate = await contract.updateRequestState(project.id, r[0], false, url);
                 let y = await requestUpdate.wait();
                 if (y.status == 1) router.push(`/project/${projectID}`)
 
@@ -102,17 +117,15 @@ export default function requests({ project, projectID }) {
         try {
             let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
             let tx = await contract.transferWithdrawalRequestFunds(project.id, r[0])
-            // let x = await tx.wait()
             let x = await tx.wait()
 
-            // if (x.status == 1) {
-            // ipfs -> total withdrawn from project & approved votes updated
-            // const url = await updateIPFSOnApproval(r);
-            // let requestUpdate = await contract.updateRequestState(project.id, r[0], url);
-            // let y = await requestUpdate.wait();
-            // if (y.status == 1) router.push(`/project/${projectID}`)
-
-            // }
+            if (x.status == 1) {
+                // ipfs -> total withdrawn from project & approved votes updated
+                const url = await updateIPFSCreator(r);
+                let requestUpdate = await contract.updateRequestState(project.id, r[0], true, url);
+                let y = await requestUpdate.wait();
+                if (y.status == 1) router.push(`/project/${projectID}`)
+            }
         } catch (err) {
             window.alert(err.message)
         }
