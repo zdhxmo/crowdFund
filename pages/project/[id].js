@@ -158,32 +158,37 @@ export default function project({ project, projectID }) {
         <p className='my-6'><span className='font-bold'>Total Contributors:</span> {project.totalDepositors}</p>
         <p className='my-6'><span className='font-bold'>Total Withdrawals:</span> {project.totalWithdrawn} ETH</p>
 
-        <input
-          onChange={e => setContributionValue(e.target.value)}
-          type='number'
-          className='p-2 my-2 rounded-md text-black'
-          value={contributionValue}
-        />
-        <button onClick={contribute} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-md'>Contribute</button>
+        <div className='text-center'>
+          <input
+            onChange={e => setContributionValue(e.target.value)}
+            type='number'
+            className='p-2 my-2 rounded-md text-black'
+            value={contributionValue}
+          />
+          <button onClick={contribute} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-md'>Contribute</button>
+        </div>
+
 
         {/* TODO: add this functionality */}
-        <div className='flex'>
-          <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise was a success (project owner only)</button>
-          <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired (contributors only)</button>
+        <div className='grid sm:grid-col-1 md:grid-cols-2'>
+          <div className='grid grid-cols-1 px-10'>
+            <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise was a success (project owner only)</button>
+
+            <Link href={`withdrawal/${projectID}`}>
+              <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Create Withdrawal Request</button>
+            </Link>
+
+            <Link href={`requests/${projectID}`}>
+              <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject/Withdraw</button>
+            </Link>
+          </div>
+
+          <div className='grid grid-cols-1 px-10'>
+            <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired (contributors only)</button>
+
+            <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
+          </div>
         </div>
-      </div>
-
-      <div className='grid grid-cols-1 px-10'>
-        <Link href={`withdrawal/${projectID}`}>
-          <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Create Withdrawal Request</button>
-        </Link>
-
-        <Link href={`requests/${projectID}`}>
-          <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject/Withdraw</button>
-        </Link>
-
-        <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
-
       </div>
     </div >
   )
