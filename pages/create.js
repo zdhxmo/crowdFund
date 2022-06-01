@@ -11,7 +11,7 @@ import {
   contractAddress
 } from '../config'
 
-const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: 0, totalPledged: 0, creator: '', currentState: 0, totalDepositors: 0 };
+const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: 0, totalPledged: 0, creator: '', currentState: 0, totalDepositors: 0, totalWithdrawn: 0 };
 
 const create = () => {
   const router = useRouter()
@@ -43,7 +43,7 @@ const create = () => {
 
     // stringify JSON data
     const data = JSON.stringify({
-      id: countParsed, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0, creator: address, currentState: 0, totalDepositors: 0
+      id: countParsed, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: 0, creator: address, currentState: 0, totalDepositors: 0, totalWithdrawn: 0
     });
 
     try {
@@ -51,7 +51,6 @@ const create = () => {
       const added = await client.add(data)
       // return url
       const url = `${added.path}`
-      console.log(url);
       return url
     } catch (error) {
       console.log('Error uploading file: ', error)

@@ -525,7 +525,6 @@ contract CrowdFund is ReentrancyGuard {
     /** @dev Function to transfer funds to project creator
      * @param _id Project ID
      * @param _withdrawalRequestIndex Index of withdrawal request
-     * TODO::: redirect a 0.3% transaction to platform admin
      */
     function transferWithdrawalRequestFunds(
         uint256 _id,
@@ -537,7 +536,6 @@ contract CrowdFund is ReentrancyGuard {
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
         nonReentrant()
     {
-        // require quorum
         require(
             // _withdrawalRequestIndex - 1 to accomodate 0 start of arrays
             idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes >
@@ -546,28 +544,28 @@ contract CrowdFund is ReentrancyGuard {
             "More than half the total depositors need to approve withdrawal request"
         );
 
+        require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn == false, "Withdrawal has laready been made for this request");
+
         require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount < idToProject[_id].totalPledged, "Insufficient funds");
 
         WithdrawalRequest storage cRequest = idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1];
 
-        // platform fee -> 1 for every 100 withdrawn
-        // uint256 platformFee = cRequest.withdrawalAmount / 1e19;
-        // (bool pfSuccess, ) = platformAdmin.call{value: platformFee}("");
-        // require(pfSuccess, "Transaction failed. Please try again later.");
-        // emit PayPlatform(_id, _withdrawalRequestIndex, platformFee);
-
-        // transfer (total - platform fee) to project creator
-        // address payable _creator = idToProject[_id].creator;
-        // uint256 _amount = cRequest.withdrawalAmount - platformFee;
+        // flat 0.3% platform fee
+        uint256 platformFee = (cRequest.withdrawalAmount.mul(3)).div(1000);
+        (bool pfSuccess, ) = payable(platformAdmin).call{value: platformFee}("");
+        require(pfSuccess, "Transaction failed. Please try again later.");
+        emit PayPlatform(_id, _withdrawalRequestIndex, platformFee);
         
+        // transfer funds to creator
         address payable _creator = idToProject[_id].creator;
-        uint256 _amount = cRequest.withdrawalAmount;
+        uint256 _amount = cRequest.withdrawalAmount - platformFee;
         (bool success, ) = _creator.call{value: _amount}("");
         require(success, "Transaction failed. Please try again later.");
         emit PayCreator(_id, _withdrawalRequestIndex, _amount);
 
+        // update states
+        cRequest.withdrawn = true;
         idToProject[_id].totalWithdrawn += cRequest.withdrawalAmount;
-
 
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
     }
@@ -578,13 +576,15 @@ contract CrowdFund is ReentrancyGuard {
      * @param _newPledged Amount pledged by contributor
      * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
      */
-    function updateProjectOnContribution(
+    function updateProjectOnTx(
         uint256 _id,
         string memory _url,
-        uint256 _newPledged
+        uint256 _newPledged,
+        uint256 _netWithdrawn
     ) public {
         idToProject[_id].ipfsURL = _url;
         idToProject[_id].totalPledged += _newPledged;
+        idToProject[_id].totalWithdrawn += _netWithdrawn;
     }
 
     /** @dev Function to update project IPFS hash on state change
@@ -607,8 +607,7 @@ contract CrowdFund is ReentrancyGuard {
      * @param _url new IPFS hash
      * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
      */
-    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, bool _withdrawn,string memory _url) public {
-        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn = _withdrawn;
+    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
         idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
     }
 

@@ -21,14 +21,22 @@ export default function project({ project, projectID }) {
   const [contributionValue, setContributionValue] = useState(0);
 
   async function updateIPFSOnContribution() {
-    const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors, creator } = project
+    const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors, creator, totalWithdrawn } = project
 
     let contri = Number(totalPledged) + Number(contributionValue)
     let newDepositors = Number(totalDepositors) + 1
 
     // stringify JSON data
     const data = JSON.stringify({
-      id: id, name: name, creator: creator, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: contri, totalDepositors: newDepositors
+      id: id,
+      name: name,
+      creator: creator,
+      description: description,
+      projectDeadline: projectDeadline,
+      goal: goal,
+      totalPledged: contri,
+      totalDepositors: newDepositors,
+      totalWithdrawn: totalWithdrawn
     });
 
     try {
@@ -58,7 +66,7 @@ export default function project({ project, projectID }) {
       if (x.status == 1) {
         const url = await updateIPFSOnContribution()
 
-        let projectUpdate = await contract.updateProjectOnContribution(project.id, url, contributionValue)
+        let projectUpdate = await contract.updateProjectOnTx(project.id, url, contributionValue, 0)
         let y = await projectUpdate.wait()
         if (y.status == 1) router.push('/')
       }
@@ -148,6 +156,7 @@ export default function project({ project, projectID }) {
         <p className='my-6'><span className='font-bold'>Total ETH pledged:</span> {project.totalPledged} ETH</p>
         <p className='my-6'><span className='font-bold'>Fundraise Goal:</span> {project.goal} ETH</p>
         <p className='my-6'><span className='font-bold'>Total Contributors:</span> {project.totalDepositors}</p>
+        <p className='my-6'><span className='font-bold'>Total Withdrawals:</span> {project.totalWithdrawn} ETH</p>
 
         <input
           onChange={e => setContributionValue(e.target.value)}

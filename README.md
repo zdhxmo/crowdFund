@@ -1,5 +1,15 @@
 # CrowdFund
 
+Automated crowdfunding website thaht interacts with users end-to-end with no
+intermediary intervention.Project creators pitch a project and a fundraise is started. Users contribute funds to the
+project. When the goal is reached, creators make a request to withdraw certain amount of
+the funds and its purpose. The contributors approve/reject the request and funds are
+transfered to the creator. (not optimized for production yet)
+
+
+TODO:
+1. create more secure IPFS uploads. currently state can be change from public functions which is just asking for trouble.
+
 Start a testnet with Ganache on port 8545 (http://localhost:8545)
 
 To compile and migrate the contracts onto testnet:
@@ -13,6 +23,7 @@ To run unit tests:
 ```
 truffle test
 ```
+
 
 ## Getting Started with the frontend
 
