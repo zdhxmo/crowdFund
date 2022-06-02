@@ -183,7 +183,8 @@ export default function requests({ project, projectID }) {
 
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
-            <p className='text-center'>Only project contributors can access this functionality</p>
+            <p className='text-center'>Only project contributors can access approve/reject functionality</p>
+            <p className='text-center mt-3 mb-3'>Creators need more than 50% of the contributors to approve a request before withdrawal can be made</p>
 
             <div className='bg-pink-500 text-white p-20 text-center rounded-md'>
                 <button onClick={getRequests} className="bg-white text-black rounded-md my-10 px-3 py-2 shadow-lg border-2 w-80">Get all withdrawal requests</button>

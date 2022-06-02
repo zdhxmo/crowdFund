@@ -305,7 +305,7 @@ contract CrowdFund is ReentrancyGuard {
         {
             require(
                 block.timestamp > idToProject[_id].projectDeadline,
-                "Contributions cannot be made to this project anymore."
+                "Invalid request. Can only be called after project deadline is reached"
             );
 
             idToProject[_id].currentState = State.Expire;
@@ -350,17 +350,15 @@ contract CrowdFund is ReentrancyGuard {
             "Project deadline hasn't been reached yet"
         );
 
-        uint256 refundAmt = contributions[_id][msg.sender];
+        address payable _contributor = payable(msg.sender);
+        uint256 _amount = contributions[_id][msg.sender];
+        (bool success, ) = _contributor.call{value: _amount}("");
+        require(success, "Transaction failed. Please try again later.");
+        emit GenerateRefund(_id, _contributor, _amount);
 
-        // if money is transfered
-        if (payable(msg.sender).send(refundAmt)) {
-            // no more contributions to the project from this user
-            contributions[_id][msg.sender] = 0;
-            // reduce total amount pledged to the project
-            idToProject[_id].totalPledged -= refundAmt;
-        }
-
-        emit GenerateRefund(_id, msg.sender, refundAmt);
+        // update project state
+        idToProject[_id].totalPledged -= _amount;
+        idToProject[_id].totalDepositors -= 1;
     }
 
     /** @dev Function to create a request for withdrawal of funds
@@ -570,6 +568,10 @@ contract CrowdFund is ReentrancyGuard {
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
     }
 
+    /* ==================================================================
+        THESE CONTRACTS CANNOT BE IN PRODUCTION. FIND A WORK AROUND TO UPDATE STATES FROM FRONTEND
+    */
+
     /** @dev Function to update project IPFS hash on payment deposit
      * @param _id Project ID
      * @param _url new IPFS hash
@@ -590,16 +592,13 @@ contract CrowdFund is ReentrancyGuard {
     /** @dev Function to update project IPFS hash on state change
      * @param _id Project ID
      * @param _url new IPFS hash
-     * @param _state new state of the project
      * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
      */
     function updateProjectOnStateChange(
         uint256 _id, 
-        string memory _url, 
-        State _state
+        string memory _url
     ) public {
         idToProject[_id].ipfsURL = _url;
-        idToProject[_id].currentState = _state;
     }
 
     /** @dev Function to update withdrawal request IPFS hash and votes on state change
@@ -610,6 +609,10 @@ contract CrowdFund is ReentrancyGuard {
     function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
         idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
     }
+
+    /* ====================================================================================== */
+
+
 
     /*===== Blockchain get functions =====*/
 
@@ -680,5 +683,9 @@ contract CrowdFund is ReentrancyGuard {
         }
 
         return withdrawals;
+    }
+
+    function getContributions(uint256 _id, address _contributor) public view returns(uint256) {
+        return contributions[_id][_contributor];
     }
 }

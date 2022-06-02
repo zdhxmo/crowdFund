@@ -107,7 +107,7 @@ export default function project({ project, projectID }) {
         // state = 2 when success
         const newState = 2;
         const url = await updateIPFSOnStateChange(newState);
-        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url, newState);
+        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
         let y = await projectUpdate.wait()
         if (y.status == 1) {
           window.alert('Project state was successfully changed to : Success')
@@ -129,14 +129,69 @@ export default function project({ project, projectID }) {
       let x = await tx.wait()
 
       if (x.status == 1) {
-        // state = 2 on expire
+        // state = 1 on expire
         const newState = 1;
         const url = await updateIPFSOnStateChange(newState);
-        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url, newState);
+        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
         let y = await projectUpdate.wait()
         if (y.status == 1) {
           window.alert('Project state was successfully changed to : Expire')
-          router.push('/')
+        }
+      }
+    } catch (err) {
+      window.alert(err.message)
+    }
+  }
+
+  async function updateIPFSOnRefund(contribution) {
+    const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors, creator, totalWithdrawn } = project
+
+    // stringify JSON data
+    const data = JSON.stringify({
+      id: id,
+      name: name,
+      creator: creator,
+      description: description,
+      projectDeadline: projectDeadline,
+      goal: goal,
+      totalPledged: totalPledged - contribution,
+      totalDepositors: totalDepositors - 1,
+      totalWithdrawn: totalWithdrawn
+    });
+
+    try {
+      // use client to add data
+      const added = await client.add(data)
+      // return url
+      const url = `${added.path}`
+      return url
+    } catch (error) {
+      console.log('Error uploading file: ', error)
+    }
+  }
+
+  async function processRefund() {
+    const web3Modal = new Web3Modal()
+    const connection = await web3Modal.connect()
+    const provider = new ethers.providers.Web3Provider(connection)
+    const signer = provider.getSigner()
+    const address = signer.getAddress();
+
+    try {
+      let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+      let tx = await contract.getRefund(BigNumber.from(project.id).toNumber());
+      let x = await tx.wait()
+
+      let contributions = new ethers.getContributions(BigNumber.from(project.id).toNumber(), address);
+      let contribution = BigNumber.from(contributions).toNumber();
+
+      if (x.status == 1) {
+        const url = await updateIPFSOnRefund(contribution);
+        let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
+        let y = await projectUpdate.wait()
+        if (y.status == 1) {
+          window.alert('Successful Refund')
+          router.push('/');
         }
       }
     } catch (err) {
@@ -186,7 +241,7 @@ export default function project({ project, projectID }) {
           <div className='grid grid-cols-1 px-10'>
             <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired (contributors only)</button>
 
-            <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
+            <button onClick={processRefund} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
           </div>
         </div>
       </div>

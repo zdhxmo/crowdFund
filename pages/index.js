@@ -9,6 +9,8 @@ export default function Home({ projects }) {
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
       <p className='text-center'>test project</p>
+      <p className='text-center'>loading is slow as processes are not optimized yet</p>
+
 
       <div className='bg-pink-500 text-white p-10 rounded-md'>
         <div>
