@@ -1,9 +1,17 @@
 # CrowdFund
- 
+
+STEP 0:
+make base project
+(donzo)
+
+STEP 1:
 => push contract to ropsten
 => update code with infura ropsten provider
 => deploy frontend to vercel
 
+STEP 2:
+=> deploy contracts to zkSync or optimism
+=> repoint frontend to zkSync network address
 
 Automated crowdfunding website thaht interacts with users end-to-end with no
 intermediary intervention.Project creators pitch a project and a fundraise is started. Users contribute funds to the
