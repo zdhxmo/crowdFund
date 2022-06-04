@@ -1,4 +1,9 @@
 # CrowdFund
+ 
+=> push contract to ropsten
+=> update code with infura ropsten provider
+=> deploy frontend to vercel
+
 
 Automated crowdfunding website thaht interacts with users end-to-end with no
 intermediary intervention.Project creators pitch a project and a fundraise is started. Users contribute funds to the

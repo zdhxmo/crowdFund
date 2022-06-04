@@ -143,7 +143,7 @@ export default function project({ project, projectID }) {
     }
   }
 
-  async function updateIPFSOnRefund(contribution) {
+  async function updateIPFSOnRefund(contributionEther) {
     const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors, creator, totalWithdrawn } = project
 
     // stringify JSON data
@@ -154,7 +154,7 @@ export default function project({ project, projectID }) {
       description: description,
       projectDeadline: projectDeadline,
       goal: goal,
-      totalPledged: totalPledged - contribution,
+      totalPledged: totalPledged - contributionEther,
       totalDepositors: totalDepositors - 1,
       totalWithdrawn: totalWithdrawn
     });
@@ -181,12 +181,17 @@ export default function project({ project, projectID }) {
       let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
       let tx = await contract.getRefund(BigNumber.from(project.id).toNumber());
       let x = await tx.wait()
+      console.log(x)
 
-      let contributions = new ethers.getContributions(BigNumber.from(project.id).toNumber(), address);
-      let contribution = BigNumber.from(contributions).toNumber();
+      let contributions = await contract.getContributions(BigNumber.from(project.id).toNumber(), address);
+
+      let conStr = contributions.toString();
+      let contribution = Number(conStr);
+
+      let contributionEther = ethers.utils.formatEther(contributions)
 
       if (x.status == 1) {
-        const url = await updateIPFSOnRefund(contribution);
+        const url = await updateIPFSOnRefund(contributionEther);
         let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
         let y = await projectUpdate.wait()
         if (y.status == 1) {
