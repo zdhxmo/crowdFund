@@ -16,7 +16,7 @@ const projectID = process.env.PROJECT_ID;
 
 const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: 0, totalPledged: 0, creator: '', currentState: 0, requestNo: '', requestDescription: '', amount: 0 };
 
-export default function withdrawal({ project, projectID }) {
+export default function Withdrawal({ project, projectID }) {
     const router = useRouter()
 
     const [withdrawalRequest, setWithdrawalRequest] = useState(initialState)

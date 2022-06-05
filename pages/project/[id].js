@@ -18,7 +18,7 @@ const projectID = process.env.PROJECT_ID;
 
 /* TODO: refactor code to prevent multiple lines doing the same thing  */
 
-export default function project({ project, projectID }) {
+export default function Project({ project, projectID }) {
   const router = useRouter()
   const [contributionValue, setContributionValue] = useState(0);
 

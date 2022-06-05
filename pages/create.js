@@ -13,7 +13,7 @@ import {
 
 const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: 0, totalPledged: 0, creator: '', currentState: 0, totalDepositors: 0, totalWithdrawn: 0 };
 
-const create = () => {
+const Create = () => {
   const router = useRouter()
   const [project, setProject] = useState(initialState)
 
@@ -128,4 +128,4 @@ const create = () => {
   )
 }
 
-export default create
+export default Create

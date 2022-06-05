@@ -9,7 +9,7 @@ import Link from 'next/link'
 const projectID = process.env.PROJECT_ID;
 
 export default function Home({ projects }) {
-  console.log(projectID)
+
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
       <p className='text-center'>test project</p>
@@ -24,7 +24,7 @@ export default function Home({ projects }) {
           <p className='my-3'>1. Creator creates a new project </p>
 
           <p className='my-3'>2. Contributors contribute until deadline</p>
-          <p className='my-3'>3. If total pledged doesn't get met on deadline date, contributors expire the project and refund donated funds back</p>
+          <p className='my-3'>3. If total pledged doesn&apos;t get met on deadline date, contributors expire the project and refund donated funds back</p>
           <p className='my-3'>4. If total amount pledged reaches the goal, creator declares the fundraise a success</p>
           <div className='my-3'>
             <p className='my-3 ml-10'>a. creator makes a withdrawal request</p>

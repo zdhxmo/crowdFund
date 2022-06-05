@@ -8,16 +8,13 @@ STEP 1:
 => push contract to ropsten
 => update code with infura ropsten provider
 => deploy frontend to vercel
+(donzo)
 
 STEP 2:
 => deploy contracts to zkSync or optimism
 => repoint frontend to zkSync network address
 
-Automated crowdfunding website thaht interacts with users end-to-end with no
-intermediary intervention.Project creators pitch a project and a fundraise is started. Users contribute funds to the
-project. When the goal is reached, creators make a request to withdraw certain amount of
-the funds and its purpose. The contributors approve/reject the request and funds are
-transfered to the creator. (not optimized for production yet)
+Automated crowdfunding website that interacts with end users with no intermediary intervention.Project creators pitch a project and a fundraise is started. Users contribute funds to the project. When the goal is reached, creators make a request to withdraw certain amount of the funds and its purpose. The contributors approve/reject the request and funds are transfered to the creator. (not optimized for production yet)
 
 
 TODO:

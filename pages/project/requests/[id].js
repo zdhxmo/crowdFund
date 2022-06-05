@@ -14,7 +14,7 @@ const ipfsURI = 'https://ipfs.io/ipfs/'
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
 
-export default function requests({ project, projectID }) {
+export default function Requests({ project, projectID }) {
     const router = useRouter()
     const [withdrawalRequests, setWithdrawalRequests] = useState([])
 
