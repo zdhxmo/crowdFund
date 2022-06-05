@@ -181,6 +181,10 @@ export default function Requests({ project, projectID }) {
         }
     }
 
+    if (router.isFallback) {
+        return <div>Loading...</div>
+    }
+
     /* TODO::: wrap excess text in description */
 
     return (

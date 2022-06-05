@@ -206,8 +206,12 @@ export default function Project({ project, projectID }) {
     }
   }
 
+  if (router.isFallback) {
+    return <div>Loading...</div>
+  }
+
   return (
-    /* make long description wrap around  */
+    /* TODO::: make long description wrap around  */
     <div className='grid mt-20 grid-cols-1 w-50'>
       <div className='bg-pink-500 text-white p-20 rounded-md mx-20 mt-20'>
         <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>

@@ -78,6 +78,10 @@ export default function Withdrawal({ project, projectID }) {
         }
     }
 
+    if (router.isFallback) {
+        return <div>Loading...</div>
+    }
+
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
             <p className='text-center'>Only project creator can access this functionality on goal reached</p>
