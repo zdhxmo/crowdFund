@@ -14,6 +14,8 @@ import Link from 'next/link'
 
 const ipfsURI = 'https://ipfs.io/ipfs/'
 
+const projectID = process.env.PROJECT_ID;
+
 /* TODO: refactor code to prevent multiple lines doing the same thing  */
 
 export default function project({ project, projectID }) {
@@ -255,8 +257,7 @@ export default function project({ project, projectID }) {
 }
 
 export async function getStaticPaths() {
-  // let provider = `https://ropsten.infura.io/v3/db0b4735bad24926a761d909e1f82576`
-  let provider = new ethers.providers.JsonRpcProvider()
+  let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
   const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
   const data = await contract.getAllProjects()
 

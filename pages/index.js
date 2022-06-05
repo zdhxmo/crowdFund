@@ -5,11 +5,17 @@ import CrowdFund from "../build/contracts/CrowdFund.json"
 import { ethers, BigNumber } from 'ethers'
 import Link from 'next/link'
 
+// require('dotenv').config();
+const projectID = process.env.PROJECT_ID;
+
 export default function Home({ projects }) {
+  console.log(projectID)
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
       <p className='text-center'>test project</p>
+      <p className='text-center'>do not speed up transactions in metamask</p>
       <p className='text-center'>loading is slow as processes are not optimized yet</p>
+      <p className='text-center'>please be patient during blockchain interactions, once transaction is complete, you will be directed to the appropriate page</p>
 
 
       <div className='bg-pink-500 text-white p-10 rounded-md'>
@@ -67,8 +73,7 @@ export default function Home({ projects }) {
 }
 
 export async function getServerSideProps() {
-  // let provider = `https://ropsten.infura.io/v3/db0b4735bad24926a761d909e1f82576`
-  let provider = new ethers.providers.JsonRpcProvider()
+  let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
   const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
   const data = await contract.getAllProjects()
   return {

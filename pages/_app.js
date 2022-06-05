@@ -43,7 +43,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <div className='min-h-screen w-screen font-mono'>
       <Head>
-        <title>HoardNut</title>
+        <title>iFund</title>
         <meta name="description" content="Create New Fundraising Campaign" />
         <link rel="icon" href="/logo.png" />
       </Head>

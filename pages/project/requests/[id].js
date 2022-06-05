@@ -8,6 +8,8 @@ import {
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
 
+const projectID = process.env.PROJECT_ID;
+
 const ipfsURI = 'https://ipfs.io/ipfs/'
 import { create as ipfsHttpClient } from 'ipfs-http-client'
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0')
@@ -219,8 +221,7 @@ export default function requests({ project, projectID }) {
 }
 
 export async function getStaticPaths() {
-    // let provider = `https://ropsten.infura.io/v3/db0b4735bad24926a761d909e1f82576`
-    let provider = new ethers.providers.JsonRpcProvider()
+    let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
 

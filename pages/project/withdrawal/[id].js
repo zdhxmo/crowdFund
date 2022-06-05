@@ -12,6 +12,8 @@ import { useState } from 'react'
 import Web3Modal from 'web3modal'
 import { useRouter } from 'next/router'
 
+const projectID = process.env.PROJECT_ID;
+
 const initialState = { id: 0, name: '', description: '', projectDeadline: '', goal: 0, totalPledged: 0, creator: '', currentState: 0, requestNo: '', requestDescription: '', amount: 0 };
 
 export default function withdrawal({ project, projectID }) {
@@ -106,8 +108,7 @@ export default function withdrawal({ project, projectID }) {
 }
 
 export async function getStaticPaths() {
-    // let provider = `https://ropsten.infura.io/v3/db0b4735bad24926a761d909e1f82576`
-    let provider = new ethers.providers.JsonRpcProvider()
+    let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
 
