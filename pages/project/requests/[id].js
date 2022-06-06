@@ -195,21 +195,21 @@ export default function Requests({ project, projectID }) {
             <div className='bg-pink-500 text-white p-20 text-center rounded-md'>
                 <button onClick={getRequests} className="bg-white text-black rounded-md my-10 px-3 py-2 shadow-lg border-2 w-80">Get all withdrawal requests</button>
 
-                <p>Withdrawal requests</p>
+                <p className='font-bold'>All Withdrawal requests</p>
 
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
                     {
                         withdrawalRequests.map(request =>
-                            <div className='border shadow rounded-xl text-left' key={request[0]}>
+                            <div className='border shadow rounded-xl text-left grid grid-cols-1' key={request[0]}>
                                 <div className='p-4'>
                                     <p className='py-4'>request number: {request[0]}</p>
-                                    <p className='py-4 text-overflow: ellipsis'>description: {request[1]}</p>
+                                    <p className='py-4 overflow-x-scroll'>description: {request[1]}</p>
                                     <p className='py-4'>amount: {ethers.utils.formatEther(request[2])} ETH</p>
                                     <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
                                     <p>Details: <a href={'https://ipfs.io/ipfs/' + request[6]}>click here</a></p>
                                     <p className='py-4'>total depositor: {project.totalDepositors}</p>
 
-                                    <div className='flex-auto '>
+                                    <div className='sm:grid sm:grid-cols-1 xs:grid xs:grid-cols-1'>
                                         <button onClick={() => approveRequest(request, projectID)} className="bg-white text-black rounded-md my-10 mx-1 px-3 py-2 shadow-lg border-2">Approve</button>
                                         <button onClick={() => rejectRequest(request, projectID)} className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Reject</button>
                                         <button onClick={() => transferFunds(request, projectID)} className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Withdraw</button>

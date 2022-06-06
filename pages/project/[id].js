@@ -183,13 +183,8 @@ export default function Project({ project, projectID }) {
       let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
       let tx = await contract.getRefund(BigNumber.from(project.id).toNumber());
       let x = await tx.wait()
-      console.log(x)
 
       let contributions = await contract.getContributions(BigNumber.from(project.id).toNumber(), address);
-
-      let conStr = contributions.toString();
-      let contribution = Number(conStr);
-
       let contributionEther = ethers.utils.formatEther(contributions)
 
       if (x.status == 1) {
@@ -212,8 +207,8 @@ export default function Project({ project, projectID }) {
 
   return (
     /* TODO::: make long description wrap around  */
-    <div className='grid mt-20 grid-cols-1 w-50'>
-      <div className='bg-pink-500 text-white p-20 rounded-md mx-20 mt-20'>
+    <div className='mt-20'>
+      <div className='bg-pink-500 text-white p-20 rounded-md mx-5 mt-20 overflow-x-scroll'>
         <p className='my-6'><span className='font-bold'> Project Number: </span> {project.id}</p>
         <p className='my-6'><span className='font-bold'> Creator: </span> {project.creator}</p>
         <p className='my-6'><span className='font-bold'> Project Name: </span> {project.name}</p>
@@ -236,23 +231,23 @@ export default function Project({ project, projectID }) {
 
 
         {/* TODO: add this functionality */}
-        <div className='grid sm:grid-col-1 md:grid-cols-2'>
-          <div className='grid grid-cols-1 px-10'>
-            <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise was a success (project owner only)</button>
+        <div className='grid sm:grid-col-1 md:grid-cols-2 sm:text-sm'>
+          <div className='grid grid-cols-1 px-10 sm:w-200 place-content-stretch'>
+            <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg flex-wrap'>Click here if fundraise was a success (project owner only)</button>
 
             <Link href={`withdrawal/${projectID}`}>
-              <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Create Withdrawal Request</button>
+              <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg min-w-50'>Create Withdrawal Request</button>
             </Link>
 
             <Link href={`requests/${projectID}`}>
-              <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Approve/Reject/Withdraw</button>
+              <button className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg flex-wrap'>Approve / Reject / Withdraw</button>
             </Link>
           </div>
 
           <div className='grid grid-cols-1 px-10'>
-            <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Click here if fundraise needs to be expired (contributors only)</button>
+            <button onClick={changeStateToExpire} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg w-50'>Click here if fundraise needs to be expired (contributors only)</button>
 
-            <button onClick={processRefund} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 mx-4 shadow-lg w-50'>Request Refund</button>
+            <button onClick={processRefund} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg w-50'>Request Refund</button>
           </div>
         </div>
       </div>
