@@ -1,44 +1,20 @@
-import '../styles/globals.css'
 import { AccountContext } from '../context.js'
 import { useState } from 'react'
-import { ethers } from 'ethers'
-import Web3Modal from 'web3modal'
-import WalletConnectProvider from '@walletconnect/web3-provider'
 import Link from 'next/link'
 import Head from 'next/head'
 import NextNProgress from "nextjs-progressbar";
 
+import '../styles/globals.css'
+import { web3connect } from "../utils/web3Connect";
+
 function MyApp({ Component, pageProps }) {
   const [account, setAccount] = useState(null)
 
-  async function getWeb3Modal() {
-    const web3Modal = new Web3Modal({
-      network: 'ropsten',
-      cacheProvider: false,
-      providerOptions: {
-        walletconnect: {
-          package: WalletConnectProvider,
-          options: {
-            infuraId: process.env.PROJECT_ID
-          },
-        },
-      },
-    })
-    return web3Modal
-  }
-
+  // connect to wallet
   async function connect() {
-    try {
-      const web3Modal = await getWeb3Modal()
-      const connection = await web3Modal.connect()
-      const provider = new ethers.providers.Web3Provider(connection)
-      const accounts = await provider.listAccounts()
-      setAccount(accounts[0])
-    } catch (err) {
-      console.log('error:', err)
-    }
+    const accounts = await web3connect()
+    setAccount(accounts)
   }
-
 
   return (
     <div className='min-h-screen w-screen font-mono'>
@@ -55,7 +31,18 @@ function MyApp({ Component, pageProps }) {
             </a>
           </Link>
 
-          <div>
+          <div className='flex'>
+            {
+              !account ?
+                <div className='my-10 mx-10' >
+                  <p>Pls connect to interact with this app</p>
+                  <button className='rounded-md bg-pink-500 text-white p-3 ml-20' onClick={connect}>Connect</button>
+                </div> :
+                <p className='rounded-md my-10 bg-pink-500 text-white p-3 ml-20' >
+                  {account[0].substr(0, 10) + "..."}
+                </p>
+            }
+
             <Link href="/create">
               <button className='rounded-md my-10 bg-pink-500 text-white p-3 ml-20' >Create New Fundraising Project</button>
             </Link>
@@ -64,6 +51,7 @@ function MyApp({ Component, pageProps }) {
 
       </div>
 
+      {/* set account context and propogate across the app */}
       <AccountContext.Provider value={account}>
         <NextNProgress />
         <Component {...pageProps} connect={connect} />

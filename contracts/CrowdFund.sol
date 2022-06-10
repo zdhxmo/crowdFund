@@ -106,7 +106,7 @@ contract CrowdFund is ReentrancyGuard {
         // current state of the fundraise
         State currentState;
         // holds URL of IPFS upload
-        string ipfsURL;
+        // string ipfsURL;
     }
 
     struct WithdrawalRequest {
@@ -122,7 +122,7 @@ contract CrowdFund is ReentrancyGuard {
         // current state of the withdrawal request
         Withdrawal currentWithdrawalState;
         // hash of the ipfs storage
-        string ipfsHash;
+        // string ipfsHash;
         // boolean to represent if amount has been withdrawn
         bool withdrawn;
     }
@@ -195,10 +195,10 @@ contract CrowdFund is ReentrancyGuard {
     }
 
     // make contract payable
-    fallback() external payable {
+    fallback() external payable {}
+    receive() external payable {
         platformAdmin.transfer(msg.value);
     }
-    receive() external payable {}
     
 
     /*===== Functions  =====*/
@@ -213,8 +213,7 @@ contract CrowdFund is ReentrancyGuard {
         string memory _name,
         string memory _description,
         uint256 _projectDeadline,
-        uint256 _goalEth,
-        string memory _ipfsURL
+        uint256 _goalEth
     ) public {
         // update ID
         projectCount += 1;
@@ -233,8 +232,7 @@ contract CrowdFund is ReentrancyGuard {
             goal: _goal,
             currentState: State.Fundraise,
             totalDepositors: 0,
-            totalWithdrawn: 0,
-            ipfsURL: _ipfsURL
+            totalWithdrawn: 0
         });
 
         // update mapping of id to new project
@@ -389,7 +387,6 @@ contract CrowdFund is ReentrancyGuard {
             approvedVotes: 0,
             // state changes on quorum
             currentWithdrawalState: Withdrawal.Reject,
-            ipfsHash: _url,
             withdrawn: false
         });
 
@@ -572,43 +569,43 @@ contract CrowdFund is ReentrancyGuard {
         THESE CONTRACTS CANNOT BE IN PRODUCTION. FIND A WORK AROUND TO UPDATE STATES FROM FRONTEND
     */
 
-    /** @dev Function to update project IPFS hash on payment deposit
-     * @param _id Project ID
-     * @param _url new IPFS hash
-     * @param _newPledged Amount pledged by contributor
-     * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
-     */
-    function updateProjectOnTx(
-        uint256 _id,
-        string memory _url,
-        uint256 _newPledged,
-        uint256 _netWithdrawn
-    ) public {
-        idToProject[_id].ipfsURL = _url;
-        idToProject[_id].totalPledged += _newPledged;
-        idToProject[_id].totalWithdrawn += _netWithdrawn;
-    }
+    // /** @dev Function to update project IPFS hash on payment deposit
+    //  * @param _id Project ID
+    //  * @param _url new IPFS hash
+    //  * @param _newPledged Amount pledged by contributor
+    //  * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
+    //  */
+    // function updateProjectOnTx(
+    //     uint256 _id,
+    //     string memory _url,
+    //     uint256 _newPledged,
+    //     uint256 _netWithdrawn
+    // ) public {
+    //     idToProject[_id].ipfsURL = _url;
+    //     idToProject[_id].totalPledged += _newPledged;
+    //     idToProject[_id].totalWithdrawn += _netWithdrawn;
+    // }
 
-    /** @dev Function to update project IPFS hash on state change
-     * @param _id Project ID
-     * @param _url new IPFS hash
-     * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
-     */
-    function updateProjectOnStateChange(
-        uint256 _id, 
-        string memory _url
-    ) public {
-        idToProject[_id].ipfsURL = _url;
-    }
+    // /** @dev Function to update project IPFS hash on state change
+    //  * @param _id Project ID
+    //  * @param _url new IPFS hash
+    //  * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
+    //  */
+    // function updateProjectOnStateChange(
+    //     uint256 _id, 
+    //     string memory _url
+    // ) public {
+    //     idToProject[_id].ipfsURL = _url;
+    // }
 
-    /** @dev Function to update withdrawal request IPFS hash and votes on state change
-     * @param _id Project ID
-     * @param _url new IPFS hash
-     * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
-     */
-    function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
-        idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
-    }
+    // /** @dev Function to update withdrawal request IPFS hash and votes on state change
+    //  * @param _id Project ID
+    //  * @param _url new IPFS hash
+    //  * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
+    //  */
+    // function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
+    //     idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
+    // }
 
     /* ====================================================================================== */
 
@@ -629,8 +626,7 @@ contract CrowdFund is ReentrancyGuard {
             uint256 projectDeadline,
             uint256 totalPledged,
             uint256 goal,
-            State currentState,
-            string memory url
+            State currentState
         )
     {
         creator = idToProject[_id].creator;
@@ -640,7 +636,6 @@ contract CrowdFund is ReentrancyGuard {
         totalPledged = idToProject[_id].totalPledged;
         goal = idToProject[_id].goal;
         currentState = idToProject[_id].currentState;
-        url = idToProject[_id].ipfsURL;
     }
 
     function getAllProjects() public view returns (Project[] memory) {
@@ -653,14 +648,6 @@ contract CrowdFund is ReentrancyGuard {
             projects[i] = currentItem;
         }
         return projects;
-    }
-
-    function getProjectURL(uint256 _id)
-        public
-        view
-        returns (string memory url)
-    {
-        url = idToProject[_id].ipfsURL;
     }
 
     function getProjectCount() public view returns (uint256 count) {

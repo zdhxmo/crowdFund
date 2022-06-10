@@ -19,6 +19,8 @@ Automated crowdfunding website that interacts with end users with no intermediar
 
 TODO:
 1. create more secure IPFS uploads. currently state can be change from public functions which is just asking for trouble.
+Possible solution is to connect to MongoDB and save IPFS hash there, connected to project ID
+The point is, the public frontend CANNOT make state changes on the blockchain.
 
 Start a testnet with Ganache on port 8545 (http://localhost:8545)
 

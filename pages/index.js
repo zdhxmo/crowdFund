@@ -51,7 +51,7 @@ export default function Home({ projects }) {
                     } </p>
 
                     <p className="my-3"> Total Pledged:  {
-                      ethers.utils.formatEther(project[5])
+                      Math.round(ethers.utils.formatEther(project[5]))
                     } ETH</p>
 
                     <p className="my-3"> Goal:  {
@@ -73,7 +73,9 @@ export default function Home({ projects }) {
 }
 
 export async function getServerSideProps() {
-  let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
+  // let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
+  let provider = new ethers.providers.JsonRpcProvider()
+
   const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
   const data = await contract.getAllProjects()
   return {
