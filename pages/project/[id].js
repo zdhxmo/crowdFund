@@ -1,21 +1,21 @@
-import {
-    contractAddress
-} from '../../config'
-import CrowdFund from "../../build/contracts/CrowdFund.json"
 import { BigNumber, ethers, web3 } from 'ethers'
 import Web3Modal from 'web3modal'
-import { useState } from 'react' // new
-
-
+import { useState, useContext } from 'react' // new
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
+import {
+    contractAddress
+} from '../../config'
+import { AccountContext } from '../../context'
+import CrowdFund from "../../build/contracts/CrowdFund.json"
 
 const projectID = process.env.PROJECT_ID;
 
 /* TODO: refactor code to prevent multiple lines doing the same thing  */
 
 export default function Project({ project, projectID }) {
+    useContext(AccountContext);
 
     const router = useRouter()
     const [contributionValue, setContributionValue] = useState(0);
@@ -31,11 +31,10 @@ export default function Project({ project, projectID }) {
         let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
         setContract(_contract);
     }
+    getContract();
 
-    // Function to cintribute funds to the project
+    // Function to contribute funds to the project
     async function contribute() {
-        // contact contract
-        await getContract();
         try {
             // send contribution
             let transaction = await contract.contributeFunds(projectID, {
@@ -53,129 +52,49 @@ export default function Project({ project, projectID }) {
         }
     }
 
-    // async function updateIPFSOnStateChange(newState) {
-    //     const { id, name, description, projectDeadline, goal, totalPledged } = project
+    // function to declare fundraise a success
+    async function changeStateToSuccess() {
+        try {
+            let tx = await contract.endContributionsSuccess(projectID);
+            let x = await tx.wait()
 
-    //     const data = JSON.stringify({
-    //         id: id, name: name, description: description, projectDeadline: projectDeadline, goal: goal, totalPledged: totalPledged, currentState: newState
-    //     });
+            if (x.status == 1) {
+                router.push(`/project/${projectID}`);
+                window.alert('Project state was successfully changed to : Success')
+            }
+        } catch (err) {
+            window.alert(err.message)
+        }
+    }
 
-    //     try {
-    //         // use client to add data
-    //         const added = await client.add(data)
-    //         // return url
-    //         const url = `${added.path}`
-    //         return url
-    //     } catch (error) {
-    //         console.log('Error uploading file: ', error)
-    //     }
-    // }
+    // function to declare fundraise a failure
+    async function changeStateToExpire() {
+        try {
+            let tx = await contract.endContributionsExpire(projectID);
+            let x = await tx.wait()
 
-    // async function changeStateToSuccess() {
-    //     const web3Modal = new Web3Modal()
-    //     const connection = await web3Modal.connect()
-    //     const provider = new ethers.providers.Web3Provider(connection)
-    //     const signer = provider.getSigner()
-    //     try {
-    //         let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-    //         let tx = await contract.endContributionsSuccess(BigNumber.from(project.id).toNumber());
-    //         let x = await tx.wait()
+            if (x.status == 1) {
+                window.alert('Project state was successfully changed to : Expire')
+            }
+        } catch (err) {
+            window.alert(err.message)
+        }
+    }
 
-    //         if (x.status == 1) {
-    //             // state = 2 when success
-    //             const newState = 2;
-    //             const url = await updateIPFSOnStateChange(newState);
-    //             let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
-    //             let y = await projectUpdate.wait()
-    //             if (y.status == 1) {
-    //                 window.alert('Project state was successfully changed to : Success')
-    //             }
-    //         }
-    //     } catch (err) {
-    //         window.alert(err.message)
-    //     }
-    // }
+    // function to process a refund on failed fundraise
+    async function processRefund() {
+        try {
+            let tx = await contract.getRefund(BigNumber.from(project.id).toNumber());
+            let x = await tx.wait()
 
-    // async function changeStateToExpire() {
-    //     const web3Modal = new Web3Modal()
-    //     const connection = await web3Modal.connect()
-    //     const provider = new ethers.providers.Web3Provider(connection)
-    //     const signer = provider.getSigner()
-    //     try {
-    //         let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-    //         let tx = await contract.endContributionsExpire(BigNumber.from(project.id).toNumber());
-    //         let x = await tx.wait()
-
-    //         if (x.status == 1) {
-    //             // state = 1 on expire
-    //             const newState = 1;
-    //             const url = await updateIPFSOnStateChange(newState);
-    //             let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
-    //             let y = await projectUpdate.wait()
-    //             if (y.status == 1) {
-    //                 window.alert('Project state was successfully changed to : Expire')
-    //             }
-    //         }
-    //     } catch (err) {
-    //         window.alert(err.message)
-    //     }
-    // }
-
-    // async function updateIPFSOnRefund(contributionEther) {
-    //     const { id, name, description, projectDeadline, goal, totalPledged, totalDepositors, creator, totalWithdrawn } = project
-
-    //     // stringify JSON data
-    //     const data = JSON.stringify({
-    //         id: id,
-    //         name: name,
-    //         creator: creator,
-    //         description: description,
-    //         projectDeadline: projectDeadline,
-    //         goal: goal,
-    //         totalPledged: totalPledged - contributionEther,
-    //         totalDepositors: totalDepositors - 1,
-    //         totalWithdrawn: totalWithdrawn
-    //     });
-
-    //     try {
-    //         // use client to add data
-    //         const added = await client.add(data)
-    //         // return url
-    //         const url = `${added.path}`
-    //         return url
-    //     } catch (error) {
-    //         console.log('Error uploading file: ', error)
-    //     }
-    // }
-
-    // async function processRefund() {
-    //     const web3Modal = new Web3Modal()
-    //     const connection = await web3Modal.connect()
-    //     const provider = new ethers.providers.Web3Provider(connection)
-    //     const signer = provider.getSigner()
-    //     const address = signer.getAddress();
-
-    //     try {
-    //         let contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-    //         let tx = await contract.getRefund(BigNumber.from(project.id).toNumber());
-    //         let x = await tx.wait()
-
-    //         let contributions = await contract.getContributions(BigNumber.from(project.id).toNumber(), address);
-    //         let contributionEther = ethers.utils.formatEther(contributions)
-
-    //         if (x.status == 1) {
-    //             const url = await updateIPFSOnRefund(contributionEther);
-    //             let projectUpdate = await contract.updateProjectOnStateChange(project.id, url);
-    //             let y = await projectUpdate.wait()
-    //             if (y.status == 1) {
-    //                 window.alert('Successful Refund')
-    //                 router.push('/');
-    //             }
-    //         }
-    //     } catch (err) {
-    //         window.alert(err.message)
-    //     }
-    // }
+            if (x.status == 1) {
+                window.alert('Successful Refund')
+                router.push('/');
+            }
+        } catch (err) {
+            window.alert(err.message)
+        }
+    }
 
     if (router.isFallback) {
         return <div>Loading...</div>
@@ -193,6 +112,8 @@ export default function Project({ project, projectID }) {
                 <p className='my-6'><span className='font-bold'>Total ETH pledged:</span> {project.totalPledged} ETH</p>
                 <p className='my-6'><span className='font-bold'>Fundraise Goal:</span> {project.goal} ETH</p>
                 <p className='my-6'><span className='font-bold'>Total Contributors:</span> {project.totalDepositors}</p>
+                <p className='my-6'><span className='font-bold'>Current State:</span> {project.currentState === 0 ? 'Fundraise Active' : (project.currentState === 1) ? 'Fundraise Expired' : 'Fundraise Success'}</p>
+
                 <p className='my-6'><span className='font-bold'>Total Withdrawals:</span> {project.totalWithdrawn} ETH</p>
 
                 <div className='text-center'>
@@ -206,8 +127,7 @@ export default function Project({ project, projectID }) {
                 </div>
 
 
-                {/* TODO: add this functionality */}
-                {/* <div className='grid sm:grid-col-1 md:grid-cols-2 sm:text-sm'>
+                <div className='grid sm:grid-col-1 md:grid-cols-2 sm:text-sm'>
                     <div className='grid grid-cols-1 px-10 sm:w-200 place-content-stretch'>
                         <button onClick={changeStateToSuccess} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg flex-wrap'>Click here if fundraise was a success (project owner only)</button>
 
@@ -225,7 +145,7 @@ export default function Project({ project, projectID }) {
 
                         <button onClick={processRefund} className='rounded-md mt-20 my-10 bg-white text-pink-500 p-3 shadow-lg w-50'>Request Refund</button>
                     </div>
-                </div> */}
+                </div>
             </div>
         </div >
     )
@@ -260,7 +180,7 @@ export async function getStaticProps({ params }) {
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getProjectDetails(id);
 
-    // parse received data in JSON
+    // parse received data into JSON
     let projectData = {
         creator: data.creator,
         name: data.name,

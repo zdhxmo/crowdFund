@@ -25,14 +25,11 @@ const Create = () => {
         let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
         setContract(_contract);
     }
+    getContract();
 
     async function saveProject() {
         // destructure project 
         const { name, description, projectDeadline, goal } = project
-
-        // set contract state
-        await getContract()
-
         try {
             // create project
             let transaction = await contract.createNewProject(name, description, projectDeadline, goal)

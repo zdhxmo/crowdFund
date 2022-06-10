@@ -369,8 +369,7 @@ contract CrowdFund is ReentrancyGuard {
         uint256 _id,
         uint32 _requestNumber,
         string memory _description,
-        uint256 _amount,
-        string memory _url
+        uint256 _amount
     ) public onlyProjectOwner(_id) checkState(_id, State.Success){
         require(idToProject[_id].totalWithdrawn < idToProject[_id].totalPledged, "Insufficient funds");
 
