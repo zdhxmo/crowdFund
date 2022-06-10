@@ -3,12 +3,50 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Head from 'next/head'
 import NextNProgress from "nextjs-progressbar";
+import { ethers } from 'ethers'
+import Web3Modal from 'web3modal'
+import WalletConnectProvider from '@walletconnect/web3-provider'
 
 import '../styles/globals.css'
-import { web3connect } from "../utils/web3Connect";
 
 function MyApp({ Component, pageProps }) {
   const [account, setAccount] = useState(null)
+
+  async function getWeb3Modal() {
+    const web3Modal = new Web3Modal({
+      network: 'ropsten',
+      cacheProvider: false,
+      providerOptions: {
+        walletconnect: {
+          package: WalletConnectProvider,
+
+          // testnet deployement
+          // options: {
+          //   infuraId: process.env.PROJECT_ID
+          // },
+
+          // localhost for dev
+          options: {
+            rpc: { 1337: 'http://localhost:8545', },
+            chainId: 1337,
+          }
+        },
+      },
+    })
+    return web3Modal
+  }
+
+  async function web3connect() {
+    try {
+      const web3Modal = await getWeb3Modal()
+      const connection = await web3Modal.connect()
+      const provider = new ethers.providers.Web3Provider(connection)
+      const accounts = await provider.listAccounts()
+      return accounts;
+    } catch (err) {
+      console.log('error:', err)
+    }
+  }
 
   // connect to wallet
   async function connect() {
@@ -48,7 +86,6 @@ function MyApp({ Component, pageProps }) {
             </Link>
           </div>
         </nav>
-
       </div>
 
       {/* set account context and propogate across the app */}

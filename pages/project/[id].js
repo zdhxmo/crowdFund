@@ -1,6 +1,6 @@
 import { BigNumber, ethers, web3 } from 'ethers'
 import Web3Modal from 'web3modal'
-import { useState, useContext } from 'react' // new
+import { useState, useContext, useEffect } from 'react' // new
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
@@ -12,8 +12,6 @@ import CrowdFund from "../../build/contracts/CrowdFund.json"
 
 const projectID = process.env.PROJECT_ID;
 
-/* TODO: refactor code to prevent multiple lines doing the same thing  */
-
 export default function Project({ project, projectID }) {
     useContext(AccountContext);
 
@@ -22,16 +20,18 @@ export default function Project({ project, projectID }) {
 
     const [contract, setContract] = useState();
 
-    // function to get contract address and update state
-    async function getContract() {
-        const web3Modal = new Web3Modal()
-        const connection = await web3Modal.connect()
-        const provider = new ethers.providers.Web3Provider(connection)
-        const signer = provider.getSigner()
-        let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-        setContract(_contract);
-    }
-    getContract();
+    useEffect(() => {
+        // function to get contract address and update state
+        async function getContract() {
+            const web3Modal = new Web3Modal()
+            const connection = await web3Modal.connect()
+            const provider = new ethers.providers.Web3Provider(connection)
+            const signer = provider.getSigner()
+            let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            setContract(_contract);
+        }
+        getContract();
+    })
 
     // Function to contribute funds to the project
     async function contribute() {
@@ -84,7 +84,7 @@ export default function Project({ project, projectID }) {
     // function to process a refund on failed fundraise
     async function processRefund() {
         try {
-            let tx = await contract.getRefund(BigNumber.from(project.id).toNumber());
+            let tx = await contract.getRefund(projectID);
             let x = await tx.wait()
 
             if (x.status == 1) {

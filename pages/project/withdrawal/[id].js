@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from 'ethers'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Web3Modal from 'web3modal'
 import { useRouter } from 'next/router'
 
@@ -8,7 +8,7 @@ import {
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
 
-const projectID = process.env.PROJECT_ID;
+// const projectID = process.env.PROJECT_ID;
 
 const initialState = { requestNo: '', requestDescription: '', amount: 0 };
 
@@ -18,17 +18,18 @@ export default function Withdrawal({ projectID }) {
     const [withdrawalRequest, setWithdrawalRequest] = useState(initialState)
     const [contract, setContract] = useState();
 
-    // function to get contract address and update state
-    async function getContract() {
-        const web3Modal = new Web3Modal()
-        const connection = await web3Modal.connect()
-        const provider = new ethers.providers.Web3Provider(connection)
-        const signer = provider.getSigner()
-        let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-        setContract(_contract);
-    }
-    getContract();
-
+    useEffect(() => {
+        // function to get contract address and update state
+        async function getContract() {
+            const web3Modal = new Web3Modal()
+            const connection = await web3Modal.connect()
+            const provider = new ethers.providers.Web3Provider(connection)
+            const signer = provider.getSigner()
+            let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            setContract(_contract);
+        }
+        getContract();
+    })
 
     async function requestWithdrawal() {
         const { requestNo, requestDescription, amount } = withdrawalRequest;

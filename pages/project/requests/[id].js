@@ -1,6 +1,6 @@
 import { ethers, BigNumber } from 'ethers'
 import Web3Modal from 'web3modal'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import {
@@ -8,23 +8,25 @@ import {
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
 
-const projectID = process.env.PROJECT_ID;
+// const projectID = process.env.PROJECT_ID;
 
 export default function Requests({ project, projectID }) {
     const router = useRouter()
     const [withdrawalRequests, setWithdrawalRequests] = useState([])
     const [contract, setContract] = useState();
 
-    // function to get contract address and update state
-    async function getContract() {
-        const web3Modal = new Web3Modal()
-        const connection = await web3Modal.connect()
-        const provider = new ethers.providers.Web3Provider(connection)
-        const signer = provider.getSigner()
-        let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-        setContract(_contract);
-    }
-    getContract();
+    useEffect(() => {
+        // function to get contract address and update state
+        async function getContract() {
+            const web3Modal = new Web3Modal()
+            const connection = await web3Modal.connect()
+            const provider = new ethers.providers.Web3Provider(connection)
+            const signer = provider.getSigner()
+            let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            setContract(_contract);
+        }
+        getContract();
+    })
 
     async function getRequests() {
         try {
@@ -79,7 +81,6 @@ export default function Requests({ project, projectID }) {
     }
 
     /* TODO::: wrap excess text in description */
-
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
             <p className='text-center'>Only project contributors can access approve/reject functionality</p>

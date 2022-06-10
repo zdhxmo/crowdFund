@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { useState } from 'react' // new
+import { useEffect, useState } from 'react' // new
 import { useRouter } from 'next/router'
 import Web3Modal from 'web3modal'
 import { ethers } from 'ethers'
@@ -16,16 +16,18 @@ const Create = () => {
     const [project, setProject] = useState(initialState)
     const [contract, setContract] = useState();
 
-    // function to get contract address and update state
-    async function getContract() {
-        const web3Modal = new Web3Modal()
-        const connection = await web3Modal.connect()
-        const provider = new ethers.providers.Web3Provider(connection)
-        const signer = provider.getSigner()
-        let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-        setContract(_contract);
-    }
-    getContract();
+    useEffect(() => {
+        // function to get contract address and update state
+        async function getContract() {
+            const web3Modal = new Web3Modal()
+            const connection = await web3Modal.connect()
+            const provider = new ethers.providers.Web3Provider(connection)
+            const signer = provider.getSigner()
+            let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
+            setContract(_contract);
+        }
+        getContract();
+    })
 
     async function saveProject() {
         // destructure project 
