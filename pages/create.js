@@ -3,18 +3,13 @@ import { useState } from 'react' // new
 import { useRouter } from 'next/router'
 import Web3Modal from 'web3modal'
 import { ethers } from 'ethers'
-import { useContext } from 'react'
 
-import { AccountContext } from '../context';
 import CrowdFund from "../build/contracts/CrowdFund.json"
 import { contractAddress } from '../config'
 
 const initialState = { name: '', description: '', projectDeadline: '', goal: 0 };
 
 const Create = () => {
-    // fetch account from the context object
-    useContext(AccountContext)
-
     // router to route back to home page
     const router = useRouter()
 

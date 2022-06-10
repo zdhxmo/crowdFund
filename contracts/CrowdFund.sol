@@ -565,52 +565,6 @@ contract CrowdFund is ReentrancyGuard {
         emit TransferRequestFunds(_id, _withdrawalRequestIndex);
     }
 
-    /* ==================================================================
-        THESE CONTRACTS CANNOT BE IN PRODUCTION. FIND A WORK AROUND TO UPDATE STATES FROM FRONTEND
-    */
-
-    // /** @dev Function to update project IPFS hash on payment deposit
-    //  * @param _id Project ID
-    //  * @param _url new IPFS hash
-    //  * @param _newPledged Amount pledged by contributor
-    //  * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
-    //  */
-    // function updateProjectOnTx(
-    //     uint256 _id,
-    //     string memory _url,
-    //     uint256 _newPledged,
-    //     uint256 _netWithdrawn
-    // ) public {
-    //     idToProject[_id].ipfsURL = _url;
-    //     idToProject[_id].totalPledged += _newPledged;
-    //     idToProject[_id].totalWithdrawn += _netWithdrawn;
-    // }
-
-    // /** @dev Function to update project IPFS hash on state change
-    //  * @param _id Project ID
-    //  * @param _url new IPFS hash
-    //  * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
-    //  */
-    // function updateProjectOnStateChange(
-    //     uint256 _id, 
-    //     string memory _url
-    // ) public {
-    //     idToProject[_id].ipfsURL = _url;
-    // }
-
-    // /** @dev Function to update withdrawal request IPFS hash and votes on state change
-    //  * @param _id Project ID
-    //  * @param _url new IPFS hash
-    //  * *** IMPORTANT: find a way to make this functionality internal. This CANNOT be a public function in production
-    //  */
-    // function updateRequestState(uint256 _id, uint32 _withdrawalRequestIndex, string memory _url) public {
-    //     idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].ipfsHash = _url;
-    // }
-
-    /* ====================================================================================== */
-
-
-
     /*===== Blockchain get functions =====*/
 
     /** @dev Function to get project details
@@ -626,7 +580,10 @@ contract CrowdFund is ReentrancyGuard {
             uint256 projectDeadline,
             uint256 totalPledged,
             uint256 goal,
+            uint256 totalDepositors,
+            uint256 totalWithdrawn,
             State currentState
+
         )
     {
         creator = idToProject[_id].creator;
@@ -635,6 +592,8 @@ contract CrowdFund is ReentrancyGuard {
         projectDeadline = idToProject[_id].projectDeadline;
         totalPledged = idToProject[_id].totalPledged;
         goal = idToProject[_id].goal;
+        totalDepositors = idToProject[_id].totalDepositors;
+        totalWithdrawn = idToProject[_id].totalWithdrawn;
         currentState = idToProject[_id].currentState;
     }
 

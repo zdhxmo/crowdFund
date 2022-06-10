@@ -13,6 +13,7 @@ export default function Home({ projects }) {
   return (
     <div className='min-h-screen my-20 w-screen p-5'>
       <p className='text-center font-bold'>test project - live only on Ropsten testnet</p>
+      <p className='text-center font-bold'>If there is a 'undefined' popup try clicking the button again after a little wait</p>
       <p className='text-center'>- do not speed up transactions in metamask</p>
       <p className='text-center'>- loading is slow as processes are not optimized yet</p>
       <p className='text-center'>- please be patient during blockchain interactions, once transaction is complete, you will be redirected to the appropriate page</p>
@@ -59,7 +60,7 @@ export default function Home({ projects }) {
                     } ETH </p>
                   </div>
 
-                  <Link href={`project/${project[10]}`} key={i}>
+                  <Link href={`project/${BigNumber.from(project[0]).toNumber()}`} key={i}>
                     <button className='rounded-md my-5 bg-pink-500 text-white p-3 mx-1'>Details</button>
                   </Link>
                 </div>
