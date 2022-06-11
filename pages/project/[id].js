@@ -101,13 +101,14 @@ export default function Project({ project, projectID }) {
     }
 
     return (
-        /* TODO::: make long description wrap around  */
         <div className='mt-20'>
-            <div className='bg-pink-500 text-white p-20 rounded-md mx-5 mt-20 overflow-x-scroll'>
+            <div className='bg-pink-500 text-white p-20 rounded-md mx-5 mt-40'>
                 <p className='my-6'><span className='font-bold'> Project Number: </span> {projectID}</p>
                 <p className='my-6'><span className='font-bold'> Creator: </span> {project.creator}</p>
                 <p className='my-6'><span className='font-bold'> Project Name: </span> {project.name}</p>
-                <p className='my-6'><span className='font-bold'>Description:</span> {project.description}</p>
+                <div className='break-words'>
+                    <p className='my-6'><span className='font-bold'>Description:</span> {project.description}</p>
+                </div>
                 <p className='my-6'><span className='font-bold'>Crowdfund deadline:</span> {new Date((BigNumber.from(project.projectDeadline).toNumber()) * 1000).toLocaleDateString()}</p>
                 <p className='my-6'><span className='font-bold'>Total ETH pledged:</span> {project.totalPledged} ETH</p>
                 <p className='my-6'><span className='font-bold'>Fundraise Goal:</span> {project.goal} ETH</p>

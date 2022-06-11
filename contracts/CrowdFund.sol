@@ -140,7 +140,7 @@ contract CrowdFund is ReentrancyGuard {
     // project ID => withdrawal request Index
     mapping(uint256 => uint32) latestWithdrawalIndex;
 
-    // id => request number => address
+    // project id => request number => address of contributors
     mapping(uint256 => mapping(uint32 => address[])) approvals;
     mapping(uint256 => mapping(uint32 => address[])) rejections;
 
@@ -372,7 +372,9 @@ contract CrowdFund is ReentrancyGuard {
         uint256 _amount
     ) public onlyProjectOwner(_id) checkState(_id, State.Success){
         require(idToProject[_id].totalWithdrawn < idToProject[_id].totalPledged, "Insufficient funds");
+        require(_requestNumber == latestWithdrawalIndex[_id] + 1, "Incorrect request number");
 
+        // convert ETH to Wei units
         uint256 _withdraw = _amount * 1e18;
 
         // create new withdrawal request
@@ -403,20 +405,20 @@ contract CrowdFund is ReentrancyGuard {
     * @param _withdrawalRequestIndex Index of the withdrawal request
     * @param _checkAddress Address of the request initiator
     */
-    function checkAddressInApprovalsIterator(
+    function _checkAddressInApprovalsIterator(
         uint256 _id,
         uint32 _withdrawalRequestIndex, 
         address _checkAddress
     )
-        public
+        internal
         view 
-        returns(bool) 
+        returns(bool approved) 
     {
         // iterate over the array specific to this id and withdrawal request
         for (uint256 i = 0; i < approvals[_id][_withdrawalRequestIndex - 1].length; i++) {
             // if address is in the array, return true
             if(approvals[_id][_withdrawalRequestIndex - 1][i] == _checkAddress) {
-                return true;
+                approved = true;
             }
         }
     }
@@ -426,20 +428,20 @@ contract CrowdFund is ReentrancyGuard {
     * @param _withdrawalRequestIndex Index of the withdrawal request
     * @param _checkAddress Address of the request initiator
     */
-    function checkAddressInRejectionIterator(
+    function _checkAddressInRejectionIterator(
         uint256 _id,
         uint32 _withdrawalRequestIndex, 
         address _checkAddress
     ) 
-        public
+        internal
         view
-        returns(bool) 
+        returns(bool rejected) 
     {
         // iterate over the array specific to this id and withdrawal request
         for (uint256 i = 0; i < rejections[_id][_withdrawalRequestIndex - 1].length; i++) {
             // if address is in the array, return true
             if(rejections[_id][_withdrawalRequestIndex - 1][i] == _checkAddress) {
-                return true;
+                rejected = true;
             }
         }
     }
@@ -458,9 +460,11 @@ contract CrowdFund is ReentrancyGuard {
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
         // confirm msg.sender hasn't approved request yet
-        require(!checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have already approved this request");
+        require(!_checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), 
+                "Invalid operation. You have already approved this request");
 
-        require(!checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have rejected this request");
+        require(!_checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), 
+                "Invalid operation. You have rejected this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -494,9 +498,10 @@ contract CrowdFund is ReentrancyGuard {
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
         // confirm user hasn't approved request
-        require(!checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have approved this request");
-
-        require(!checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), "Invalid operation. You have already rejected this request");
+        require(!_checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), 
+                "Invalid operation. You have approved this request");
+        require(!_checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), 
+                "Invalid operation. You have already rejected this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -505,8 +510,15 @@ contract CrowdFund is ReentrancyGuard {
         for (uint256 i = 0; i < _lastWithdrawal; i++) {
             // if request number is equal to index
             if(i + 1 == _withdrawalRequestIndex) {
-                // increment approval count
-                idToWithdrawalRequests[_id][i].approvedVotes -= 1;
+                // if there hve been approvals, decrement
+                if(idToWithdrawalRequests[_id][i].approvedVotes != 0) {
+                    // decrement approval count
+                    idToWithdrawalRequests[_id][i].approvedVotes -= 1;
+                } 
+                    // else if no one has approved request yet, keep approvals to 0
+                else {
+                    idToWithdrawalRequests[_id][i].approvedVotes == 0;
+                }
             }
         }
 
@@ -538,9 +550,11 @@ contract CrowdFund is ReentrancyGuard {
             "More than half the total depositors need to approve withdrawal request"
         );
 
-        require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn == false, "Withdrawal has laready been made for this request");
+        require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn == false, 
+                "Withdrawal has laready been made for this request");
 
-        require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount < idToProject[_id].totalPledged, "Insufficient funds");
+        require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount < idToProject[_id].totalPledged, 
+                "Insufficient funds");
 
         WithdrawalRequest storage cRequest = idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1];
 

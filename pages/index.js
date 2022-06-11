@@ -10,11 +10,7 @@ import Link from 'next/link'
 export default function Home({ projects }) {
     return (
         <div className='min-h-screen my-20 w-screen p-5'>
-            <p className='text-center font-bold'>test project - live only on Ropsten testnet</p>
-            <p className='text-center'>- do not speed up transactions in metamask</p>
-            <p className='text-center'>- loading is slow as processes are not optimized yet</p>
-            <p className='text-center'>- please be patient during blockchain interactions, once transaction is complete, you will be redirected to the appropriate page</p>
-
+            <p className='text-center font-bold'>tset project --- Please connect to the Goerli testnet</p>
 
             <div className='bg-pink-500 text-white p-10 rounded-md'>
                 <div>
@@ -40,7 +36,7 @@ export default function Home({ projects }) {
                                     <p>ID: {BigNumber.from(project[0]).toNumber()}</p>
                                     <p className="my-6 text-2xl font-semibold">{project[2]}</p>
                                     <div>
-                                        <p className="my-3 text-gray-400">{project[3]}</p>
+                                        <p className="my-3 text-gray-400">{project[3]?.substr(0, 20) + "..."}</p>
                                         <p className="my-3"> Deadline:  {
                                             new Date((BigNumber.from(project[4]).toNumber()) * 1000).toLocaleDateString()
                                         } </p>

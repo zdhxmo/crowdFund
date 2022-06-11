@@ -94,17 +94,19 @@ export default function Requests({ project, projectID }) {
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6'>
                     {
                         withdrawalRequests.map(request =>
-                            <div className='border shadow rounded-xl text-left grid grid-cols-1' key={request[0]}>
+                            <div className='border shadow rounded-xl text-left grid grid-cols-1 lg:grid-col-2' key={request[0]}>
                                 <div className='p-4'>
                                     <p className='py-4'>request number: {request[0]}</p>
-                                    <p className='py-4 overflow-x-scroll'>description: {request[1]}</p>
+                                    <p className='py-4 break-words'>description: {request[1]}</p>
                                     <p className='py-4'>amount: {ethers.utils.formatEther(request[2])} ETH</p>
                                     <p className='py-4'>total approvals: {BigNumber.from(request[4]).toNumber()}</p>
                                     <p className='py-4'>total depositor: {project.totalDepositors}</p>
 
                                     <div className='sm:grid sm:grid-cols-1 xs:grid xs:grid-cols-1'>
                                         <button onClick={() => approveRequest(request, projectID)} className="bg-white text-black rounded-md my-10 mx-1 px-3 py-2 shadow-lg border-2">Approve</button>
+
                                         <button onClick={() => rejectRequest(request, projectID)} className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Reject</button>
+
                                         <button onClick={() => transferFunds(request, projectID)} className="bg-white text-black rounded-md my-10 px-3 mx-1 py-2 shadow-lg border-2">Withdraw</button>
                                     </div>
                                 </div>
