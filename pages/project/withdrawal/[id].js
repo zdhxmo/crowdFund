@@ -31,6 +31,7 @@ export default function Withdrawal({ projectID }) {
         getContract();
     })
 
+    // function to request withdrawals
     async function requestWithdrawal() {
         const { requestNo, requestDescription, amount } = withdrawalRequest;
 

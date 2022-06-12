@@ -28,6 +28,7 @@ export default function Requests({ project, projectID }) {
         getContract();
     })
 
+    // function to get all requests made by the creator
     async function getRequests() {
         try {
             let x = await contract.getAllWithdrawalRequests(projectID)
@@ -37,6 +38,7 @@ export default function Requests({ project, projectID }) {
         }
     }
 
+    // function to approve a specific request
     async function approveRequest(r, projectID) {
         try {
             let tx = await contract.approveWithdrawalRequest(projectID, r[0])
@@ -50,6 +52,7 @@ export default function Requests({ project, projectID }) {
         }
     }
 
+    // function to reje a specific request
     async function rejectRequest(r, projectID) {
         try {
             let tx = await contract.rejectWithdrawalRequest(projectID, r[0])
@@ -63,6 +66,7 @@ export default function Requests({ project, projectID }) {
         }
     }
 
+    // function to transfer funds to the creator if requests were approved
     async function transferFunds(r, projectID) {
         try {
             let tx = await contract.transferWithdrawalRequestFunds(projectID, r[0])
@@ -80,7 +84,6 @@ export default function Requests({ project, projectID }) {
         return <div>Loading...</div>
     }
 
-    /* TODO::: wrap excess text in description */
     return (
         <div className='grid sm:grid-cols-1 lg:grid-cols-1 mt-20 '>
             <p className='text-center'>Only project contributors can access approve/reject functionality</p>

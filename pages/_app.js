@@ -88,7 +88,7 @@ function MyApp({ Component, pageProps }) {
         </nav>
       </div>
 
-      {/* set account context and propogate across the app */}
+      {/* drip account into the app */}
       <AccountContext.Provider value={account}>
         <NextNProgress />
         {account && <Component {...pageProps} connect={connect} />}
