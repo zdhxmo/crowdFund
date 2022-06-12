@@ -12,7 +12,7 @@
     "async": "^2.6.4",
     "node-fetch": "^2.6.7",
     "lodash": "^4.17.21",
-    "underscore": "^1.21.1",
+    "underscore": "^1.12.1",
     "yargs-parser": "^5.0.1"
   },
   "dependencies": {
