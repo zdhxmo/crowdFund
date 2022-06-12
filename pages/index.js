@@ -10,7 +10,7 @@ const infuraKey = process.env.PROJECT_ID;
 export default function Home({ projects }) {
     return (
         <div className='min-h-screen my-20 w-screen p-5'>
-            <p className='text-center font-bold'>tset project --- Please connect to the Goerli testnet</p>
+            <p className='text-center font-bold'>test project --- Please connect to the Rinkeby testnet</p>
 
             <div className='bg-pink-500 text-white p-10 rounded-md'>
                 <div>
