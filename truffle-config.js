@@ -13,12 +13,18 @@ module.exports = {
       port: 8545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
     },
-    goerli: {
-      provider: () => new HDWalletProvider(mnemonic, `https://goerli.infura.io/v3/${projectID}`),
-      network_id: '5', // eslint-disable-line camelcase
+    // goerli: {
+    //   provider: () => new HDWalletProvider(mnemonic, `https://goerli.infura.io/v3/${projectID}`),
+    //   network_id: '5', // eslint-disable-line camelcase
+    //   gas: 4465030,
+    //   gasPrice: 10000000000,
+    // },
+    rinkeby: {
+      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/${projectID}`),
+      network_id: "4", // Rinkeby ID 4
       gas: 4465030,
       gasPrice: 10000000000,
-    },
+    }
   },
 
   // Set default mocha options here, use special reporters etc.

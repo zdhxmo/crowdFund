@@ -14,22 +14,22 @@ function MyApp({ Component, pageProps }) {
 
   async function getWeb3Modal() {
     const web3Modal = new Web3Modal({
-      network: 'ropsten',
+      network: 'rinkeby',
       cacheProvider: false,
       providerOptions: {
         walletconnect: {
           package: WalletConnectProvider,
 
           // testnet deployement
-          // options: {
-          //   infuraId: process.env.PROJECT_ID
-          // },
+          options: {
+            infuraId: process.env.PROJECT_ID
+          },
 
           // localhost for dev
-          options: {
-            rpc: { 1337: 'http://localhost:8545', },
-            chainId: 1337,
-          }
+          // options: {
+          //   rpc: { 1337: 'http://localhost:8545', },
+          //   chainId: 1337,
+          // }
         },
       },
     })

@@ -78,8 +78,6 @@ const Create = () => {
                         placeholder='Give it a goal ... (in ETH). Only integer values are valid'
                         className='p-2 my-2 rounded-md'
                     />
-                    {/* <button type='button' className="w-20 text-white rounded-md my-10 px-3 py-2 shadow-lg border-2" onClick={saveProject}>Submit</button> */}
-
                     <button type='button' className="w-20 text-white rounded-md my-10 px-3 py-2 shadow-lg border-2" onClick={saveProject}>Submit</button>
                 </div>
             </main>

@@ -8,7 +8,7 @@ import {
 } from '../../../config'
 import CrowdFund from "../../../build/contracts/CrowdFund.json"
 
-// const projectID = process.env.PROJECT_ID;
+const infuraKey = process.env.PROJECT_ID;
 
 const initialState = { requestNo: '', requestDescription: '', amount: 0 };
 
@@ -80,8 +80,10 @@ export default function Withdrawal({ projectID }) {
 }
 
 export async function getStaticPaths() {
-    //   let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
-    let provider = new ethers.providers.JsonRpcProvider()
+    let provider = new ethers.providers.JsonRpcProvider(`https://rinkeby.infura.io/v3/${infuraKey}`)
+
+    // localhost 
+    // let provider = new ethers.providers.JsonRpcProvider()
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
 

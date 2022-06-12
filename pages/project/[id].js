@@ -10,7 +10,7 @@ import {
 import { AccountContext } from '../../context'
 import CrowdFund from "../../build/contracts/CrowdFund.json"
 
-const projectID = process.env.PROJECT_ID;
+const infuraKey = process.env.PROJECT_ID;
 
 export default function Project({ project, projectID }) {
     useContext(AccountContext);
@@ -153,8 +153,9 @@ export default function Project({ project, projectID }) {
 }
 
 export async function getStaticPaths() {
-    //   let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
-    let provider = new ethers.providers.JsonRpcProvider()
+    let provider = new ethers.providers.JsonRpcProvider(`https://rinkeby.infura.io/v3/${infuraKey}`)
+
+    // let provider = new ethers.providers.JsonRpcProvider()
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
 
@@ -174,10 +175,10 @@ export async function getStaticProps({ params }) {
     const { id } = params
 
     // contact the blockchain
-    //   let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
+    let provider = new ethers.providers.JsonRpcProvider(`https://rinkeby.infura.io/v3/${infuraKey}`)
 
     // localhost
-    let provider = new ethers.providers.JsonRpcProvider()
+    // let provider = new ethers.providers.JsonRpcProvider()
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getProjectDetails(id);
 

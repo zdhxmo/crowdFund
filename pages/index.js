@@ -5,7 +5,7 @@ import CrowdFund from "../build/contracts/CrowdFund.json"
 import { ethers, BigNumber } from 'ethers'
 import Link from 'next/link'
 
-// const projectID = process.env.PROJECT_ID;
+const infuraKey = process.env.PROJECT_ID;
 
 export default function Home({ projects }) {
     return (
@@ -64,8 +64,10 @@ export default function Home({ projects }) {
 }
 
 export async function getServerSideProps() {
-    // let provider = new ethers.providers.JsonRpcProvider(`https://ropsten.infura.io/v3/${projectID}`)
-    let provider = new ethers.providers.JsonRpcProvider()
+    let provider = new ethers.providers.JsonRpcProvider(`https://rinkeby.infura.io/v3/${infuraKey}`)
+
+    // localhost
+    // let provider = new ethers.providers.JsonRpcProvider()
 
     const contract = new ethers.Contract(contractAddress, CrowdFund.abi, provider)
     const data = await contract.getAllProjects()
