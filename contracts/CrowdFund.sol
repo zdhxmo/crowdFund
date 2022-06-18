@@ -1,3 +1,8 @@
+/* 
+TODO: change project struct name and description to bytes32 
+
+ */
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
@@ -212,7 +217,7 @@ contract CrowdFund is ReentrancyGuard {
         string memory _description,
         uint256 _projectDeadline,
         uint256 _goalEth
-    ) public {
+    ) external {
         // update ID
         projectCount += 1;
 
@@ -254,7 +259,7 @@ contract CrowdFund is ReentrancyGuard {
      * @param _id Project ID where contributions are to be made
      */
     function contributeFunds(uint256 _id)
-        public
+        external
         payable
         checkState(_id, State.Fundraise)
         nonReentrant()
@@ -295,15 +300,10 @@ contract CrowdFund is ReentrancyGuard {
     * @param _id Project ID
     */
     function endContributionsExpire(uint256 _id) 
-        public 
+        external 
         onlyProjectDonor(_id)
         checkState(_id, State.Fundraise) 
         {
-            // require(
-            //     block.timestamp > idToProject[_id].projectDeadline,
-            //     "Invalid request. Can only be called after project deadline is reached"
-            // );
-
             if(block.timestamp < idToProject[_id].projectDeadline) {
                 revert CrowdFund__TransactionFailed();
             }
@@ -320,7 +320,7 @@ contract CrowdFund is ReentrancyGuard {
     * @param _id Project ID
     */
     function endContributionsSuccess(uint256 _id) 
-        public 
+        external 
         onlyProjectOwner(_id)
         checkState(_id, State.Fundraise) 
         {
@@ -342,25 +342,25 @@ contract CrowdFund is ReentrancyGuard {
      * @param _id Project ID
      */
     function getRefund(uint256 _id)
-        public
+        external
         payable
         onlyProjectDonor(_id)
         checkState(_id, State.Expire)
         nonReentrant()
     {
-        // require(
-        //     block.timestamp > idToProject[_id].projectDeadline,
-        //     "Project deadline hasn't been reached yet"
-        // );
         if(block.timestamp < idToProject[_id].projectDeadline) {
             revert CrowdFund__Invalid();
         }
 
-        address payable _contributor = payable(msg.sender);
+        // address payable _contributor = payable(msg.sender);
         uint256 _amount = contributions[_id][msg.sender];
-        (bool success, ) = _contributor.call{value: _amount}("");
-        require(success, "Transaction failed. Please try again later.");
-        emit GenerateRefund(_id, _contributor, _amount);
+        contributions[_id][msg.sender] = 0;
+        (bool success, ) = payable(msg.sender).call{value: _amount}("");
+        if(!success) {
+            revert CrowdFund__Invalid();
+        }
+        // require(success, "Transaction failed. Please try again later.");
+        emit GenerateRefund(_id, msg.sender, _amount);
 
         // update project state
         idToProject[_id].totalPledged -= _amount;
@@ -378,10 +378,7 @@ contract CrowdFund is ReentrancyGuard {
         uint32 _requestNumber,
         string memory _description,
         uint256 _amount
-    ) public onlyProjectOwner(_id) checkState(_id, State.Success){
-        // require(idToProject[_id].totalWithdrawn < idToProject[_id].totalPledged, "Insufficient funds");
-        // require(_requestNumber == latestWithdrawalIndex[_id] + 1, "Incorrect request number");
-
+    ) external onlyProjectOwner(_id) checkState(_id, State.Success){
         if(idToProject[_id].totalWithdrawn > idToProject[_id].totalPledged) {
             revert CrowdFund__TransactionFailed();
         }
@@ -429,8 +426,9 @@ contract CrowdFund is ReentrancyGuard {
         view 
         returns(bool approved) 
     {
+        uint256 arrayLength = approvals[_id][_withdrawalRequestIndex - 1].length;
         // iterate over the array specific to this id and withdrawal request
-        for (uint256 i = 0; i < approvals[_id][_withdrawalRequestIndex - 1].length; i++) {
+        for (uint256 i = 0; i < arrayLength; i++) {
             // if address is in the array, return true
             if(approvals[_id][_withdrawalRequestIndex - 1][i] == _checkAddress) {
                 approved = true;
@@ -452,8 +450,9 @@ contract CrowdFund is ReentrancyGuard {
         view
         returns(bool rejected) 
     {
+        uint256 arrayLength = rejections[_id][_withdrawalRequestIndex - 1].length;
         // iterate over the array specific to this id and withdrawal request
-        for (uint256 i = 0; i < rejections[_id][_withdrawalRequestIndex - 1].length; i++) {
+        for (uint256 i = 0; i < arrayLength; i++) {
             // if address is in the array, return true
             if(rejections[_id][_withdrawalRequestIndex - 1][i] == _checkAddress) {
                 rejected = true;
@@ -469,14 +468,11 @@ contract CrowdFund is ReentrancyGuard {
         uint256 _id,
         uint32 _withdrawalRequestIndex
     )
-        public
+        external
         onlyProjectDonor(_id)
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
-        // confirm msg.sender hasn't approved request yet
-        // require(!_checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), 
-        //         "Invalid operation. You have already approved this request");
         if(_checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender)) {
             revert CrowdFund__Invalid();
         }
@@ -484,9 +480,6 @@ contract CrowdFund is ReentrancyGuard {
         if(_checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender)) {
             revert CrowdFund__Invalid();
         }
-
-        // require(!_checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), 
-        //         "Invalid operation. You have rejected this request");
 
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
@@ -514,17 +507,12 @@ contract CrowdFund is ReentrancyGuard {
         uint256 _id,
         uint32 _withdrawalRequestIndex
     )
-        public
+        external
         onlyProjectDonor(_id)
         checkState(_id, State.Success)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
     {
         // confirm user hasn't approved request
-        // require(!_checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender), 
-        //         "Invalid operation. You have approved this request");
-        // require(!_checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender), 
-        //         "Invalid operation. You have already rejected this request");
-
         if(_checkAddressInApprovalsIterator(_id, _withdrawalRequestIndex, msg.sender)) {
             revert CrowdFund__Invalid();
         }
@@ -532,6 +520,7 @@ contract CrowdFund is ReentrancyGuard {
         if(_checkAddressInRejectionIterator(_id, _withdrawalRequestIndex, msg.sender)) {
             revert CrowdFund__Invalid();
         }
+
         // get total withdrawal requests made
         uint256 _lastWithdrawal = latestWithdrawalIndex[_id];
 
@@ -546,7 +535,7 @@ contract CrowdFund is ReentrancyGuard {
                 } 
                     // else if no one has approved request yet, keep approvals to 0
                 else {
-                    idToWithdrawalRequests[_id][i].approvedVotes == 0;
+                    idToWithdrawalRequests[_id][i].approvedVotes = 0;
                 }
             }
         }
@@ -565,51 +554,42 @@ contract CrowdFund is ReentrancyGuard {
         uint256 _id,
         uint32 _withdrawalRequestIndex
     )
-        public
+        external
         payable
         onlyProjectOwner(_id)
         checkLatestWithdrawalIndex(_id, _withdrawalRequestIndex)
         nonReentrant()
     {
-        // require(
-        //     // _withdrawalRequestIndex - 1 to accomodate 0 start of arrays
-        //     idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes >
-        //             (idToProject[_id].totalDepositors).div(2)
-        //     ,
-        //     "More than half the total depositors need to approve withdrawal request"
-        // );
-
         if(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].approvedVotes <
                     (idToProject[_id].totalDepositors).div(2)) {
             revert CrowdFund__TransactionFailed();
         }
 
-        // require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn == false, 
-        //         "Withdrawal has laready been made for this request");
-
         if(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawn == true) {
             revert CrowdFund__TransactionFailed();
         }
-        // require(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount < idToProject[_id].totalPledged, 
-        //         "Insufficient funds");
 
         if(idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1].withdrawalAmount > idToProject[_id].totalPledged) {
             revert CrowdFund__TransactionFailed();
         }
-        
+
         WithdrawalRequest storage cRequest = idToWithdrawalRequests[_id][_withdrawalRequestIndex - 1];
 
         // flat 0.3% platform fee
         uint256 platformFee = (cRequest.withdrawalAmount.mul(3)).div(1000);
         (bool pfSuccess, ) = payable(platformAdmin).call{value: platformFee}("");
-        require(pfSuccess, "Transaction failed. Please try again later.");
+        if(!pfSuccess) {
+            revert CrowdFund__Invalid();
+        }
         emit PayPlatform(_id, _withdrawalRequestIndex, platformFee);
         
         // transfer funds to creator
         address payable _creator = idToProject[_id].creator;
         uint256 _amount = cRequest.withdrawalAmount - platformFee;
         (bool success, ) = _creator.call{value: _amount}("");
-        require(success, "Transaction failed. Please try again later.");
+        if(!success) {
+            revert CrowdFund__Invalid();
+        }
         emit PayCreator(_id, _withdrawalRequestIndex, _amount);
 
         // update states
@@ -625,7 +605,7 @@ contract CrowdFund is ReentrancyGuard {
      * @param _id Project ID
      */
     function getProjectDetails(uint256 _id)
-        public
+        external
         view
         returns (
             address creator,
@@ -651,7 +631,7 @@ contract CrowdFund is ReentrancyGuard {
         currentState = idToProject[_id].currentState;
     }
 
-    function getAllProjects() public view returns (Project[] memory) {
+    function getAllProjects() external view returns (Project[] memory) {
         uint256 _projectCount = projectCount;
 
         Project[] memory projects = new Project[](_projectCount);
@@ -663,12 +643,12 @@ contract CrowdFund is ReentrancyGuard {
         return projects;
     }
 
-    function getProjectCount() public view returns (uint256 count) {
+    function getProjectCount() external view returns (uint256 count) {
         count = projectCount;
     }
 
     function getAllWithdrawalRequests(uint256 _id)
-        public
+        external
         view
         returns (WithdrawalRequest[] memory)
     {
@@ -685,7 +665,7 @@ contract CrowdFund is ReentrancyGuard {
         return withdrawals;
     }
 
-    function getContributions(uint256 _id, address _contributor) public view returns(uint256) {
+    function getContributions(uint256 _id, address _contributor) external view returns(uint256) {
         return contributions[_id][_contributor];
     }
 }
