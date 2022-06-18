@@ -6,8 +6,10 @@ import NextNProgress from "nextjs-progressbar";
 import { ethers } from 'ethers'
 import Web3Modal from 'web3modal'
 import WalletConnectProvider from '@walletconnect/web3-provider'
+import Image from 'next/image.js';
 
 import '../styles/globals.css'
+import logo from "../public/logo.png";
 
 function MyApp({ Component, pageProps }) {
   const [account, setAccount] = useState(null)
@@ -55,7 +57,7 @@ function MyApp({ Component, pageProps }) {
   }
 
   return (
-    <div className='min-h-screen w-screen font-mono'>
+    <div className='min-h-screen font-mono w-screen'>
       <Head>
         <title>iFund</title>
         <meta name="description" content="Create New Fundraising Campaign" />
@@ -65,6 +67,7 @@ function MyApp({ Component, pageProps }) {
         <nav className='flex mx-auto text-black-20/100'>
           <Link href="/">
             <a>
+              {/* <Image src={logo} alt="crowdFund logo" width={100} height={100} /> */}
               <img src="/logo.png" alt="crowdFund logo" className='h-20 object-contain my-5 ml-5' />
             </a>
           </Link>

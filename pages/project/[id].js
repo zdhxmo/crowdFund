@@ -1,5 +1,4 @@
-import { BigNumber, ethers, web3 } from 'ethers'
-import Web3Modal from 'web3modal'
+import { BigNumber, ethers } from 'ethers'
 import { useState, useContext, useEffect } from 'react' // new
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -9,6 +8,8 @@ import {
 } from '../../config'
 import { AccountContext } from '../../context'
 import CrowdFund from "../../build/contracts/CrowdFund.json"
+
+import { getContract } from "../../utils/contractConnect.js";
 
 const infuraKey = process.env.PROJECT_ID;
 
@@ -21,17 +22,9 @@ export default function Project({ project, projectID }) {
     const [contract, setContract] = useState();
 
     useEffect(() => {
-        // function to get contract address and update state
-        async function getContract() {
-            const web3Modal = new Web3Modal()
-            const connection = await web3Modal.connect()
-            const provider = new ethers.providers.Web3Provider(connection)
-            const signer = provider.getSigner()
-            let _contract = new ethers.Contract(contractAddress, CrowdFund.abi, signer)
-            setContract(_contract);
-        }
-        getContract();
-    })
+        let _contract = getContract();
+        setContract(_contract);
+    }, [])
 
     // Function to contribute funds to the project
     async function contribute() {
@@ -101,8 +94,8 @@ export default function Project({ project, projectID }) {
     }
 
     return (
-        <div className='mt-20'>
-            <div className='bg-pink-500 text-white p-20 rounded-md mx-5 mt-40'>
+        <div className='mt-10'>
+            <div className='bg-pink-500 text-white p-20 rounded-md mx-5 mt-40 xs:w-screen'>
                 <p className='my-6'><span className='font-bold'> Project Number: </span> {projectID}</p>
                 <p className='my-6'><span className='font-bold'> Creator: </span> {project.creator}</p>
                 <p className='my-6'><span className='font-bold'> Project Name: </span> {project.name}</p>
