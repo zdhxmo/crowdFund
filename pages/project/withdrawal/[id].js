@@ -1,6 +1,7 @@
 import { BigNumber, ethers } from 'ethers'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import Web3Modal from 'web3modal'
 
 import {
     contractAddress
